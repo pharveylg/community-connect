@@ -1,0 +1,367 @@
+"use client";
+
+import { useState, type FormEvent } from "react";
+import Link from "next/link";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { getFirebaseAuth } from "@/lib/firebase/client";
+import { firebaseErrorMessage } from "@/lib/firebase-error";
+import { RegisterBasicInfoSchema, DependentSchema } from "@/lib/validation";
+import {
+  registerAccount,
+  setRole,
+  setBookingFor,
+  addDependentAction,
+  skipDependentSetup,
+} from "@/app/actions/auth";
+
+type Step = "basic" | "role" | "seekerOnboard" | "dependentSetup";
+
+const STEP_PROGRESS: Record<Step, number> = {
+  basic: 33,
+  role: 66,
+  seekerOnboard: 85,
+  dependentSetup: 95,
+};
+
+export function RegisterFlow() {
+  const [step, setStep] = useState<Step>("basic");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+
+  const [fullName, setFullName] = useState("");
+  const [mobile, setMobile] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const [depName, setDepName] = useState("");
+  const [depRelationship, setDepRelationship] = useState("");
+  const [depNotes, setDepNotes] = useState("");
+
+  async function handleBasicSubmit(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    const parsed = RegisterBasicInfoSchema.safeParse({ fullName, mobile, email, password });
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? "Please check your details.");
+      return;
+    }
+
+    setPending(true);
+    try {
+      const credential = await createUserWithEmailAndPassword(
+        getFirebaseAuth(),
+        parsed.data.email,
+        parsed.data.password
+      );
+      const idToken = await credential.user.getIdToken();
+      const result = await registerAccount(idToken, {
+        fullName: parsed.data.fullName,
+        mobile: parsed.data.mobile,
+        email: parsed.data.email,
+      });
+      if (result.error) {
+        setError(result.error);
+        setPending(false);
+        return;
+      }
+      setStep("role");
+      setPending(false);
+    } catch (err) {
+      setError(firebaseErrorMessage(err));
+      setPending(false);
+    }
+  }
+
+  async function handleSelectRole(role: "seeker" | "provider") {
+    setError(null);
+    setPending(true);
+    const result = await setRole(role);
+    if (result?.next === "seekerOnboard") {
+      setStep("seekerOnboard");
+      setPending(false);
+    }
+    // "provider" redirects server-side.
+  }
+
+  async function handleBookingFor(bookingFor: "self" | "dependent") {
+    setError(null);
+    setPending(true);
+    const result = await setBookingFor(bookingFor);
+    if (result?.next === "dependentSetup") {
+      setStep("dependentSetup");
+      setPending(false);
+    }
+    // "self" redirects server-side.
+  }
+
+  async function handleDependentSubmit(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    const parsed = DependentSchema.safeParse({
+      name: depName,
+      relationship: depRelationship,
+      notes: depNotes,
+    });
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? "Please check your details.");
+      return;
+    }
+
+    setPending(true);
+    await addDependentAction(parsed.data);
+    // Redirects server-side.
+  }
+
+  return (
+    <div>
+      <div
+        className="mb-6 h-1 overflow-hidden rounded-full"
+        style={{ background: "var(--c-border)" }}
+      >
+        <div
+          className="h-full rounded-full transition-all"
+          style={{ background: "var(--c-accent)", width: `${STEP_PROGRESS[step]}%` }}
+        />
+      </div>
+
+      {error && <p className="cc-error mb-4">{error}</p>}
+
+      {step === "basic" && (
+        <>
+          <h1 className="mb-1 text-xl font-semibold">Create your account</h1>
+          <p className="mb-6 text-sm" style={{ color: "var(--c-text-2)" }}>
+            Step 1 of 3 — Basic details
+          </p>
+          <form onSubmit={handleBasicSubmit} className="flex flex-col gap-4">
+            <div>
+              <label className="cc-label" htmlFor="fullName">
+                Full name
+              </label>
+              <input
+                id="fullName"
+                className="cc-input"
+                placeholder="Your full name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                autoComplete="name"
+              />
+            </div>
+            <div>
+              <label className="cc-label" htmlFor="mobile">
+                Mobile number
+              </label>
+              <input
+                id="mobile"
+                type="tel"
+                className="cc-input"
+                placeholder="e.g. 0917 123 4567"
+                value={mobile}
+                onChange={(e) => setMobile(e.target.value)}
+                autoComplete="tel"
+              />
+            </div>
+            <div>
+              <label className="cc-label" htmlFor="email">
+                Email address
+              </label>
+              <input
+                id="email"
+                type="email"
+                className="cc-input"
+                placeholder="your@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+              />
+            </div>
+            <div>
+              <label className="cc-label" htmlFor="password">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                className="cc-input"
+                placeholder="At least 6 characters"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
+              />
+            </div>
+            <button type="submit" className="cc-btn cc-btn-primary mt-1" disabled={pending}>
+              {pending ? "Creating account…" : "Continue"}
+            </button>
+          </form>
+          <p className="mt-4 text-center text-sm" style={{ color: "var(--c-text-2)" }}>
+            Already have an account?{" "}
+            <Link href="/login" className="font-medium" style={{ color: "var(--c-accent)" }}>
+              Log in
+            </Link>
+          </p>
+        </>
+      )}
+
+      {step === "role" && (
+        <>
+          <h1 className="mb-1 text-xl font-semibold">How will you use Community Connect?</h1>
+          <p className="mb-6 text-sm" style={{ color: "var(--c-text-2)" }}>
+            Step 2 of 3 — Choose your role
+          </p>
+          <div className="flex flex-col gap-3">
+            <button
+              type="button"
+              className="cc-role-card"
+              disabled={pending}
+              onClick={() => handleSelectRole("seeker")}
+            >
+              <span className="text-2xl">🔍</span>
+              <span>
+                <span className="mb-0.5 block font-semibold">Service seeker</span>
+                <span className="text-xs" style={{ color: "var(--c-text-2)" }}>
+                  Book transport, handymen, caregivers, event helpers, and more. Perfect for
+                  seniors and their families.
+                </span>
+              </span>
+            </button>
+            <button
+              type="button"
+              className="cc-role-card"
+              disabled={pending}
+              onClick={() => handleSelectRole("provider")}
+            >
+              <span className="text-2xl">🛠</span>
+              <span>
+                <span className="mb-0.5 block font-semibold">Service provider</span>
+                <span className="text-xs" style={{ color: "var(--c-text-2)" }}>
+                  List your services, set your own rates, manage your schedule, and grow your
+                  client base.
+                </span>
+              </span>
+            </button>
+          </div>
+        </>
+      )}
+
+      {step === "seekerOnboard" && (
+        <>
+          <h1 className="mb-1 text-xl font-semibold">Who are you booking for?</h1>
+          <p className="mb-6 text-sm" style={{ color: "var(--c-text-2)" }}>
+            Step 3 of 3 — Booking preference
+          </p>
+          <div className="flex flex-col gap-3">
+            <button
+              type="button"
+              className="cc-role-card"
+              disabled={pending}
+              onClick={() => handleBookingFor("self")}
+            >
+              <span className="text-2xl">🙋</span>
+              <span>
+                <span className="mb-0.5 block font-semibold">Myself</span>
+                <span className="text-xs" style={{ color: "var(--c-text-2)" }}>
+                  I will personally be using the services I book.
+                </span>
+              </span>
+            </button>
+            <button
+              type="button"
+              className="cc-role-card"
+              disabled={pending}
+              onClick={() => handleBookingFor("dependent")}
+            >
+              <span className="text-2xl">👴</span>
+              <span>
+                <span className="mb-0.5 block font-semibold">A family member</span>
+                <span className="text-xs" style={{ color: "var(--c-text-2)" }}>
+                  I am booking on behalf of a parent, grandparent, or someone I care for.
+                </span>
+              </span>
+            </button>
+          </div>
+          <div className="mt-4 text-center">
+            <button
+              type="button"
+              className="text-sm"
+              style={{ color: "var(--c-text-3)" }}
+              disabled={pending}
+              onClick={() => handleBookingFor("self")}
+            >
+              I&apos;ll decide later
+            </button>
+          </div>
+        </>
+      )}
+
+      {step === "dependentSetup" && (
+        <>
+          <h1 className="mb-1 text-xl font-semibold">Add a dependent profile</h1>
+          <p className="mb-2 text-sm" style={{ color: "var(--c-text-2)" }}>
+            Their details
+          </p>
+          <p className="mb-6 text-xs" style={{ color: "var(--c-text-3)" }}>
+            This name will appear when you book services on their behalf. You can add more
+            profiles from your account settings.
+          </p>
+          <form onSubmit={handleDependentSubmit} className="flex flex-col gap-4">
+            <div>
+              <label className="cc-label" htmlFor="depName">
+                Dependent&apos;s full name
+              </label>
+              <input
+                id="depName"
+                className="cc-input"
+                placeholder="e.g. Maria Santos"
+                value={depName}
+                onChange={(e) => setDepName(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="cc-label" htmlFor="depRelationship">
+                Your relationship to them
+              </label>
+              <input
+                id="depRelationship"
+                className="cc-input"
+                placeholder="e.g. Mother, Father, Grandparent"
+                value={depRelationship}
+                onChange={(e) => setDepRelationship(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="cc-label" htmlFor="depNotes">
+                Notes for providers (optional)
+              </label>
+              <textarea
+                id="depNotes"
+                className="cc-input"
+                style={{ minHeight: 80, paddingTop: 10, paddingBottom: 10 }}
+                placeholder="e.g. Needs wheelchair access, prefers morning appointments…"
+                value={depNotes}
+                onChange={(e) => setDepNotes(e.target.value)}
+              />
+            </div>
+            <button type="submit" className="cc-btn cc-btn-primary" disabled={pending}>
+              {pending ? "Saving…" : "Save and finish"}
+            </button>
+          </form>
+          <div className="mt-3 text-center">
+            <button
+              type="button"
+              className="text-sm"
+              style={{ color: "var(--c-text-3)" }}
+              disabled={pending}
+              onClick={() => {
+                setPending(true);
+                void skipDependentSetup();
+              }}
+            >
+              Skip for now
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}

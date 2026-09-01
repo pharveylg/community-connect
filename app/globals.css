@@ -1,8 +1,28 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f5f4f0;
+  --foreground: #26251f;
+
+  --c-surface: #ffffff;
+  --c-surface-2: #f0efe9;
+  --c-border: #e2ded5;
+  --c-border-md: #c8c2b5;
+
+  --c-text: #26251f;
+  --c-text-2: #6b6657;
+  --c-text-3: #9c9486;
+
+  --c-accent: #0b4480;
+  --c-accent-light: #e6f0fb;
+
+  --c-danger: #8b1f1f;
+  --c-danger-light: #fdeaea;
+
+  --r-md: 8px;
+  --r-lg: 14px;
+  --r-xl: 20px;
+  --r-full: 999px;
 }
 
 @theme inline {
@@ -14,13 +34,110 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #16150f;
     --foreground: #ededed;
+    --c-surface: #1e1d17;
+    --c-surface-2: #26251f;
+    --c-border: #38362c;
+    --c-border-md: #4a4738;
+    --c-text: #ededed;
+    --c-text-2: #b3ada0;
+    --c-text-3: #847d6c;
+    --c-accent-light: #16294a;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.cc-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  padding: 16px;
+}
+
+.cc-input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 12px;
+  border: 1.5px solid var(--c-border-md);
+  border-radius: var(--r-md);
+  background: var(--c-surface);
+  color: var(--c-text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.cc-input:focus {
+  border-color: var(--c-accent);
+}
+
+.cc-label {
+  display: block;
+  font-size: 13px;
+  color: var(--c-text-2);
+  margin-bottom: 8px;
+}
+
+.cc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: var(--r-md);
+  font-weight: 500;
+  font-size: 14px;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.cc-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cc-btn-primary {
+  background: var(--c-accent);
+  color: #fff;
+}
+
+.cc-btn-primary:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.cc-btn-secondary {
+  background: var(--c-surface-2);
+  color: var(--c-text);
+  border: 1px solid var(--c-border-md);
+}
+
+.cc-role-card {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  border: 1.5px solid var(--c-border);
+  border-radius: var(--r-lg);
+  padding: 16px;
+  text-align: left;
+  transition: all 0.15s;
+}
+
+.cc-role-card:hover {
+  border-color: var(--c-accent);
+  background: var(--c-accent-light);
+}
+
+.cc-error {
+  font-size: 13px;
+  color: var(--c-danger);
+  background: var(--c-danger-light);
+  border-radius: var(--r-md);
+  padding: 8px 12px;
 }

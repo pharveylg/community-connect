@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Community Connect Services</title>
+<style>
+/* ── TOKENS ──────────────────────────────────────────────────────── */
+:root {
+  --c-bg:        #F5F4F0;
+  --c-surface:   #FFFFFF;
+  --c-surface-2: #F0EFE9;
+  --c-surface-3: #E8E6DF;
+  --c-border:    #E2DED5;
+  --c-border-md: #C8C2B5;
+
+  --c-text:      #26251F;
+  --c-text-2:    #6B6657;
+  --c-text-3:    #9C9486;
+  --c-text-inv:  #FFFFFF;
+
+  --c-accent:       #0B4480;
+  --c-accent-light: #E6F0FB;
+  --c-accent-text:  #0B4480;
+
+  --c-success:       #1E6B2E;
+  --c-success-light: #E8F5EC;
+  --c-warning:       #7A4A00;
+  --c-warning-light: #FDF3E3;
+  --c-danger:        #8B1F1F;
+  --c-danger-light:  #FDEAEA;
+  --c-admin:         #5B21B6;
+  --c-admin-light:   #F3E8FF;
+
+  --r-sm:  4px;
+  --r-md:  8px;
+  --r-lg:  14px;
+  --r-xl:  20px;
+  --r-full: 999px;
+
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px;
+  --sp-4: 16px; --sp-5: 20px; --sp-6: 24px;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.07);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.10);
+
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --touch: 48px;
+  --sidebar: 240px;
+  --topbar: 56px;
+}
+
+/* ── RESET ───────────────────────────────────────────────────────── */
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html,body { height:100%; font-family:var(--font); background:var(--c-bg); color:var(--c-text); font-size:14px; line-height:1.5; }
+button { font-family:var(--font); cursor:pointer; border:none; background:none; }
+input,select,textarea { font-family:var(--font); }
+img { display:block; max-width:100%; }
+
+/* ── MODULE SWITCHER ─────────────────────────────────────────────── */
+#module-bar {
+  position:fixed; top:0; left:0; right:0; z-index:200;
+  background:var(--c-text); color:var(--c-text-inv);
+  display:flex; align-items:center; gap:var(--sp-2);
+  padding:0 var(--sp-4); height:40px;
+  font-size:12px;
+}
+#module-bar .bar-label { color:#aaa; margin-right:var(--sp-2); font-size:11px; letter-spacing:.5px; text-transform:uppercase; }
+.mod-btn {
+  padding:4px 12px; border-radius:var(--r-full);
+  background:transparent; color:#ccc; font-size:12px; font-weight:500;
+  border:1px solid transparent; transition:all .15s;
+}
+.mod-btn:hover { color:#fff; border-color:#555; }
+.mod-btn.active { background:var(--c-accent); color:#fff; border-color:var(--c-accent); }
+#module-bar .bar-right { margin-left:auto; font-size:11px; color:#888; }
+
+/* ── APP SHELL ───────────────────────────────────────────────────── */
+#app { padding-top:40px; min-height:100%; display:flex; flex-direction:column; align-items:center; }
+
+/* ── PHONE FRAME ─────────────────────────────────────────────────── */
+.phone-wrap { padding:var(--sp-6) var(--sp-4) 80px; display:flex; justify-content:center; }
+.phone {
+  width:375px; min-height:720px;
+  background:var(--c-surface);
+  border-radius:var(--r-xl);
+  border:1px solid var(--c-border-md);
+  box-shadow:var(--shadow-md);
+  overflow:hidden;
+  display:flex; flex-direction:column;
+  position:relative;
+}
+.phone-screen { flex:1; overflow-y:auto; padding:var(--sp-4); padding-bottom:80px; }
+.phone-screen::-webkit-scrollbar { width:0; }
+
+/* ── NAV BAR (bottom) ────────────────────────────────────────────── */
+.phone-nav {
+  position:absolute; bottom:0; left:0; right:0;
+  background:var(--c-surface);
+  border-top:1px solid var(--c-border);
+  display:flex; height:64px;
+  padding-bottom:env(safe-area-inset-bottom, 0);
+}
+.nav-tab {
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:3px; font-size:10px; color:var(--c-text-3); cursor:pointer;
+  min-height:var(--touch); transition:color .15s;
+}
+.nav-tab.active { color:var(--c-accent); }
+.nav-tab svg { width:22px; height:22px; }
+
+/* ── TYPOGRAPHY ──────────────────────────────────────────────────── */
+.t-title  { font-size:20px; font-weight:600; letter-spacing:-.3px; }
+.t-head   { font-size:17px; font-weight:600; letter-spacing:-.2px; }
+.t-sub    { font-size:13px; color:var(--c-text-2); }
+.t-label  { font-size:13px; color:var(--c-text-2); margin-bottom:var(--sp-2); display:block; }
+.t-note   { font-size:11px; color:var(--c-text-3); }
+.t-money  { font-size:24px; font-weight:700; letter-spacing:-.5px; }
+
+/* ── BUTTONS ─────────────────────────────────────────────────────── */
+.btn {
+  display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-2);
+  border-radius:var(--r-md); font-weight:500; font-size:14px;
+  min-height:var(--touch); padding:0 var(--sp-4); transition:opacity .15s;
+  width:100%;
+}
+.btn:active { opacity:.85; }
+.btn-primary   { background:var(--c-accent); color:#fff; }
+.btn-secondary { background:var(--c-surface-2); color:var(--c-text); border:1px solid var(--c-border-md); }
+.btn-danger    { background:var(--c-danger-light); color:var(--c-danger); border:1px solid var(--c-danger); }
+.btn-ghost     { background:transparent; color:var(--c-accent); }
+.btn-sm { min-height:36px; font-size:12px; padding:0 var(--sp-3); width:auto; }
+.btn-admin { background:var(--c-admin); color:#fff; }
+
+/* ── INPUTS ──────────────────────────────────────────────────────── */
+.input-wrap { margin-bottom:var(--sp-4); }
+.input-field {
+  width:100%; min-height:var(--touch);
+  padding:0 var(--sp-3);
+  border:1.5px solid var(--c-border-md);
+  border-radius:var(--r-md);
+  background:var(--c-surface);
+  color:var(--c-text); font-size:14px;
+  transition:border-color .15s;
+  outline:none;
+}
+.input-field:focus { border-color:var(--c-accent); }
+.input-field::placeholder { color:var(--c-text-3); }
+
+/* ── PILLS ───────────────────────────────────────────────────────── */
+.pill {
+  display:inline-flex; align-items:center;
+  padding:3px 10px; border-radius:var(--r-full);
+  font-size:11px; font-weight:500; white-space:nowrap;
+}
+.pill-accent   { background:var(--c-accent-light);  color:var(--c-accent-text); }
+.pill-success  { background:var(--c-success-light); color:var(--c-success); }
+.pill-warning  { background:var(--c-warning-light); color:var(--c-warning); }
+.pill-danger   { background:var(--c-danger-light);  color:var(--c-danger); }
+.pill-admin    { background:var(--c-admin-light);   color:var(--c-admin); }
+.pill-neutral  { background:var(--c-surface-3);     color:var(--c-text-2); }
+
+/* ── CARDS ───────────────────────────────────────────────────────── */
+.card {
+  background:var(--c-surface-2);
+  border-radius:var(--r-lg); padding:var(--sp-3);
+  margin-bottom:var(--sp-3);
+}
+.card-border {
+  background:var(--c-surface);
+  border:1px solid var(--c-border);
+  border-radius:var(--r-lg); padding:var(--sp-3);
+  margin-bottom:var(--sp-3);
+}
+.row-card {
+  display:flex; align-items:center; gap:var(--sp-3);
+  background:var(--c-surface);
+  border:1px solid var(--c-border);
+  border-radius:var(--r-lg);
+  padding:var(--sp-3) var(--sp-4);
+  margin-bottom:var(--sp-2);
+  cursor:pointer; transition:border-color .15s;
+}
+.row-card:hover { border-color:var(--c-border-md); }
+
+/* ── AVATAR ──────────────────────────────────────────────────────── */
+.avatar {
+  border-radius:50%; background:var(--c-surface-3);
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; flex-shrink:0; overflow:hidden;
+}
+.av-sm  { width:36px; height:36px; font-size:15px; }
+.av-md  { width:48px; height:48px; font-size:20px; }
+.av-lg  { width:64px; height:64px; font-size:28px; }
+.av-accent { background:var(--c-accent-light); color:var(--c-accent); font-weight:600; font-size:13px; }
+
+/* ── DIVIDER ─────────────────────────────────────────────────────── */
+.divider { border:none; border-top:1px solid var(--c-border); margin:var(--sp-3) 0; }
+
+/* ── TOAST ───────────────────────────────────────────────────────── */
+.toast {
+  position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+  background:var(--c-text); color:#fff;
+  padding:10px 20px; border-radius:var(--r-full);
+  font-size:13px; white-space:nowrap;
+  opacity:0; pointer-events:none; transition:opacity .2s;
+  z-index:999;
+}
+.toast.show { opacity:1; }
+
+/* ── OVERLAY / MODAL ─────────────────────────────────────────────── */
+.overlay {
+  position:absolute; inset:0;
+  background:rgba(0,0,0,.45);
+  display:flex; align-items:flex-end;
+  z-index:100; border-radius:var(--r-xl);
+}
+.sheet {
+  background:var(--c-surface);
+  border-radius:var(--r-xl) var(--r-xl) 0 0;
+  padding:var(--sp-5) var(--sp-4) calc(var(--sp-5) + env(safe-area-inset-bottom, 0));
+  width:100%; max-height:85%;
+  overflow-y:auto;
+}
+.sheet-handle {
+  width:40px; height:4px; border-radius:2px;
+  background:var(--c-border-md); margin:0 auto var(--sp-4);
+}
+
+/* ── SECTION HEADER ──────────────────────────────────────────────── */
+.section-hd {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:var(--sp-3);
+}
+
+/* ── PROGRESS BAR ────────────────────────────────────────────────── */
+.progress-wrap { height:4px; background:var(--c-border); border-radius:2px; margin-bottom:var(--sp-5); overflow:hidden; }
+.progress-fill { height:100%; background:var(--c-accent); border-radius:2px; transition:width .3s; }
+
+/* ── BACK BUTTON ─────────────────────────────────────────────────── */
+.back-btn {
+  display:inline-flex; align-items:center; gap:var(--sp-1);
+  font-size:13px; color:var(--c-text-2); margin-bottom:var(--sp-4);
+  min-height:36px; padding:0 var(--sp-2);
+  border-radius:var(--r-md);
+}
+.back-btn:hover { background:var(--c-surface-2); color:var(--c-text); }
+
+/* ── LANDING SPECIFIC ────────────────────────────────────────────── */
+.landing-hero {
+  text-align:center; padding:var(--sp-6) var(--sp-4) var(--sp-5);
+}
+.landing-logo {
+  width:72px; height:72px; border-radius:var(--r-xl);
+  background:var(--c-accent); display:flex; align-items:center;
+  justify-content:center; font-size:32px;
+  margin:0 auto var(--sp-4); box-shadow:0 4px 16px rgba(11,68,128,.3);
+}
+.feat-grid {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:var(--sp-2); margin-bottom:var(--sp-5);
+}
+.feat-item {
+  background:var(--c-surface-2); border-radius:var(--r-md);
+  padding:var(--sp-3); text-align:center;
+  font-size:12px; color:var(--c-text-2);
+}
+.feat-item .feat-icon { font-size:20px; margin-bottom:4px; }
+
+/* ── AUTH SCREENS ────────────────────────────────────────────────── */
+.auth-header {
+  display:flex; align-items:center; gap:var(--sp-3);
+  padding:var(--sp-4) var(--sp-4) 0;
+  min-height:var(--topbar);
+}
+.auth-body { padding:var(--sp-4); }
+
+/* ── ROLE CARDS ──────────────────────────────────────────────────── */
+.role-card {
+  border:1.5px solid var(--c-border);
+  border-radius:var(--r-lg); padding:var(--sp-4);
+  margin-bottom:var(--sp-3); cursor:pointer; transition:all .15s;
+  display:flex; gap:var(--sp-3); align-items:flex-start;
+}
+.role-card:hover { border-color:var(--c-accent); background:var(--c-accent-light); }
+.role-card.selected { border-color:var(--c-accent); background:var(--c-accent-light); }
+.role-icon { font-size:28px; flex-shrink:0; margin-top:2px; }
+.role-title { font-weight:600; font-size:15px; margin-bottom:2px; }
+.role-desc { font-size:12px; color:var(--c-text-2); line-height:1.4; }
+
+/* ── OTP BOXES ───────────────────────────────────────────────────── */
+.otp-row { display:flex; gap:var(--sp-2); justify-content:center; margin:var(--sp-4) 0; }
+.otp-box {
+  width:44px; height:52px; border-radius:var(--r-md);
+  border:1.5px solid var(--c-border-md); background:var(--c-surface);
+  text-align:center; font-size:20px; font-weight:600;
+  color:var(--c-text); outline:none; transition:border-color .15s;
+}
+.otp-box:focus { border-color:var(--c-accent); }
+.otp-box.filled { border-color:var(--c-success); color:var(--c-success); }
+
+/* ── DESKTOP PLACEHOLDER ─────────────────────────────────────────── */
+.desktop-shell {
+  width:100%; min-height:calc(100vh - 40px);
+  display:flex; flex-direction:column;
+  background:var(--c-bg);
+}
+.desktop-topbar {
+  height:var(--topbar); background:var(--c-surface);
+  border-bottom:1px solid var(--c-border);
+  display:flex; align-items:center; gap:var(--sp-4);
+  padding:0 var(--sp-6); flex-shrink:0;
+}
+.desktop-body { display:flex; flex:1; overflow:hidden; }
+.desktop-sidebar {
+  width:var(--sidebar); background:var(--c-surface);
+  border-right:1px solid var(--c-border);
+  display:flex; flex-direction:column;
+  padding:var(--sp-4) 0; flex-shrink:0;
+}
+.sidebar-item {
+  display:flex; align-items:center; gap:var(--sp-3);
+  padding:10px var(--sp-4); font-size:13px; font-weight:500;
+  color:var(--c-text-2); cursor:pointer; transition:all .15s;
+  border-left:3px solid transparent;
+}
+.sidebar-item:hover { background:var(--c-surface-2); color:var(--c-text); }
+.sidebar-item.active { color:var(--c-accent); background:var(--c-accent-light); border-left-color:var(--c-accent); }
+.sidebar-item svg { width:18px; height:18px; flex-shrink:0; }
+.desktop-content { flex:1; overflow-y:auto; padding:var(--sp-6); }
+.desktop-section-title { font-size:11px; text-transform:uppercase; letter-spacing:.8px; color:var(--c-text-3); padding:var(--sp-3) var(--sp-4) var(--sp-1); }
+
+/* ── KPI GRID ────────────────────────────────────────────────────── */
+.kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:var(--sp-4); margin-bottom:var(--sp-6); }
+.kpi-card { background:var(--c-surface); border-radius:var(--r-lg); padding:var(--sp-4); border:1px solid var(--c-border); }
+.kpi-label { font-size:12px; color:var(--c-text-2); margin-bottom:var(--sp-1); }
+.kpi-value { font-size:28px; font-weight:700; letter-spacing:-.5px; }
+.kpi-delta { font-size:11px; margin-top:4px; }
+.kpi-delta.up   { color:var(--c-success); }
+.kpi-delta.down { color:var(--c-danger); }
+
+.dt-table { width:100%; border-collapse:collapse; font-size:13px; }
+.dt-table th { text-align:left; font-size:11px; color:var(--c-text-3); font-weight:500; text-transform:uppercase; letter-spacing:.5px; padding:var(--sp-2) var(--sp-3); border-bottom:1px solid var(--c-border); }
+.dt-table td { padding:var(--sp-3); border-bottom:1px solid var(--c-border); vertical-align:middle; }
+.dt-table tr:last-child td { border-bottom:none; }
+.dt-table tr:hover td { background:var(--c-surface-2); }
+
+/* ── DEMO BADGE ──────────────────────────────────────────────────── */
+.demo-badge {
+  background:var(--c-accent-light); border-radius:var(--r-md);
+  padding:var(--sp-3) var(--sp-4); margin-bottom:var(--sp-4);
+  border-left:3px solid var(--c-accent);
+}
+.demo-badge .db-title { font-size:12px; font-weight:600; color:var(--c-accent); margin-bottom:4px; }
+.demo-badge .db-item  { font-size:11px; color:var(--c-accent-text); }
+</style>
+</head>
+<body>
+
+<!-- MODULE SWITCHER -->
+<div id="module-bar">
+  <span class="bar-label">View</span>
+  <button class="mod-btn active" onclick="switchModule('mobile')">📱 Mobile</button>
+  <button class="mod-btn" onclick="switchModule('desktop')">🖥 Desktop</button>
+  <span class="bar-right">Community Connect Services</span>
+</div>
+
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────────────
+var MODULE = 'mobile'; // mobile | desktop
+
+var AUTH = {
+  isLoggedIn: false,
+  screen: 'landing', // landing|login|register|otp|role|seekerOnboard|dependentSetup
+  accounts: [
+    { id:'u1', name:'JC Santos',   initials:'JC', mobile:'0915 442 7781', email:'jc@example.com',    role:'seeker',   bookingFor:'dependent', dependents:[{name:'Elena Santos', relationship:'Mother', notes:'Prefers morning appointments'}] },
+    { id:'u2', name:'Ramon D.',    initials:'RD', mobile:'0917 234 5678', email:'ramon@example.com', role:'provider', providerId:'p1' },
+    { id:'u3', name:'Maria Santos',initials:'MS', mobile:'0918 000 0001', email:'admin@example.com', role:'admin' },
+  ],
+  currentUser: null,
+  reg: { name:'', mobile:'', email:'', password:'', role:'', bookingFor:'self', dependents:[] },
+  loginEmail:'', loginPassword:'',
+  otpVerified: false,
+  otpTimer: null,
+  newDep: { name:'', relationship:'', notes:'' },
+};
+
+var DESKTOP = {
+  activeModule: 'dashboard',
+};
+
+// ─── HELPERS ──────────────────────────────────────────────────────
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2400);
+}
+
+function mk(tag, attrs, html) {
+  var e = document.createElement(tag);
+  if (attrs) Object.keys(attrs).forEach(function(k){
+    if (k === 'class') e.className = attrs[k];
+    else if (k.startsWith('on')) e[k] = attrs[k];
+    else e.setAttribute(k, attrs[k]);
+  });
+  if (html != null) {
+    if (typeof html === 'string') e.innerHTML = html;
+    else if (html instanceof Node) e.appendChild(html);
+    else if (Array.isArray(html)) html.forEach(function(c){ if(c instanceof Node) e.appendChild(c); });
+  }
+  return e;
+}
+function ap(parent, children) {
+  (Array.isArray(children)?children:[children]).forEach(function(c){
+    if (!c) return;
+    if (c instanceof Node) parent.appendChild(c);
+    else parent.appendChild(document.createTextNode(String(c)));
+  });
+  return parent;
+}
+function div(cls, children) {
+  var d = mk('div', cls ? {class:cls} : {});
+  if (children) ap(d, Array.isArray(children)?children:[children]);
+  return d;
+}
+function p(text, cls, style) {
+  var e = mk('p', cls?{class:cls}:{});
+  if (style) e.style.cssText = style;
+  e.textContent = String(text||'');
+  return e;
+}
+function span(text, cls, style) {
+  var e = mk('span', cls?{class:cls}:{});
+  if (style) e.style.cssText = style;
+  e.textContent = String(text||'');
+  return e;
+}
+function btn(text, cls, onclick, style) {
+  var b = mk('button', {class: 'btn '+(cls||'')});
+  if (style) b.style.cssText = style;
+  b.textContent = text;
+  b.onclick = onclick;
+  return b;
+}
+function inpField(type, placeholder, value, oninput, extraClass) {
+  var i = mk('input', {type:type, placeholder:placeholder||'', class:'input-field '+(extraClass||'')});
+  i.value = value || '';
+  i.oninput = oninput;
+  return i;
+}
+function inputWrap(label, inputEl) {
+  var w = div('input-wrap');
+  if (label) ap(w, mk('label', {class:'t-label'}, label));
+  ap(w, inputEl);
+  return w;
+}
+function pill(text, cls) {
+  return mk('span', {class:'pill '+cls}, text);
+}
+function svgIcon(name) {
+  var icons = {
+    home:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>',
+    search:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+    book:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18"/><rect x="14" y="3" width="7" height="18"/></svg>',
+    chat:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
+    user:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+    dash:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>',
+    jobs:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+    cal:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+    wallet:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 010-4h14v4"/><path d="M3 5v14a2 2 0 002 2h16v-5"/><path d="M18 12h.01"/></svg>',
+    users:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
+    flag:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>',
+    log:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>',
+    chart:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>',
+    settings: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>',
+    back:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,18 9,12 15,6"/></svg>',
+    check:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20,6 9,17 4,12"/></svg>',
+    eye:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+    eye_off:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>',
+  };
+  var w = mk('span', {style:'display:inline-flex;'});
+  w.innerHTML = icons[name] || '';
+  return w;
+}
+
+// ─── MODULE SWITCHER ──────────────────────────────────────────────
+function switchModule(mod) {
+  MODULE = mod;
+  document.querySelectorAll('.mod-btn').forEach(function(b,i){
+    b.classList.toggle('active', (i===0&&mod==='mobile')||(i===1&&mod==='desktop'));
+  });
+  render();
+}
+
+// ─── AUTH LOGIC ───────────────────────────────────────────────────
+function goAuth(screen) { AUTH.screen = screen; render(); }
+
+function doLogin() {
+  var email = AUTH.loginEmail.trim();
+  var acc = null;
+  for (var i=0;i<AUTH.accounts.length;i++) { if(AUTH.accounts[i].email===email) { acc=AUTH.accounts[i]; break; } }
+  if (!email || !AUTH.loginPassword.trim()) { showToast('Please enter your email and password'); return; }
+  if (!acc) { showToast('No account found with that email'); return; }
+  AUTH.currentUser = acc;
+  AUTH.isLoggedIn = true;
+  render();
+}
+
+function doRegister() {
+  var r = AUTH.reg;
+  if (!r.name.trim()||!r.mobile.trim()||!r.email.trim()||!r.password.trim()) { showToast('Please fill in all fields'); return; }
+  if (r.password.length < 6) { showToast('Password must be at least 6 characters'); return; }
+  AUTH.otpVerified = false;
+  goAuth('otp');
+  AUTH.otpTimer = setTimeout(function(){ AUTH.otpVerified=true; render(); }, 1600);
+}
+
+function confirmOtp() {
+  if (!AUTH.otpVerified) { showToast('Please wait for verification to complete'); return; }
+  goAuth('role');
+}
+
+function setRole(role) {
+  AUTH.reg.role = role;
+  if (role === 'seeker') { goAuth('seekerOnboard'); }
+  else { finishReg(); }
+}
+
+function setSeekerFor(val) {
+  AUTH.reg.bookingFor = val;
+  if (val === 'dependent') { AUTH.newDep={name:'',relationship:'',notes:''}; goAuth('dependentSetup'); }
+  else { finishReg(); }
+}
+
+function addDependent() {
+  var d = AUTH.newDep;
+  if (!d.name.trim()||!d.relationship.trim()) { showToast('Please enter name and relationship'); return; }
+  AUTH.reg.dependents.push({name:d.name.trim(),relationship:d.relationship.trim(),notes:d.notes.trim()});
+  finishReg();
+}
+
+function finishReg() {
+  var r = AUTH.reg;
+  var newAcc = { id:'u'+Date.now(), name:r.name.trim(), initials:r.name.trim().split(' ').map(function(n){return n[0];}).join('').toUpperCase().slice(0,2), mobile:r.mobile.trim(), email:r.email.trim(), role:r.role||'seeker', bookingFor:r.bookingFor, dependents:r.dependents.slice() };
+  AUTH.accounts.push(newAcc);
+  AUTH.currentUser = newAcc;
+  AUTH.isLoggedIn = true;
+  showToast('Welcome, '+r.name.split(' ')[0]+'!');
+  render();
+}
+
+function doLogout() {
+  AUTH.isLoggedIn = false; AUTH.currentUser = null;
+  AUTH.screen = 'landing'; AUTH.loginEmail=''; AUTH.loginPassword='';
+  AUTH.reg = {name:'',mobile:'',email:'',password:'',role:'',bookingFor:'self',dependents:[]};
+  AUTH.otpVerified = false;
+  render();
+}
+
+// ─── RENDER AUTH SCREENS ──────────────────────────────────────────
+function renderLanding(screen) {
+  // LANDING
+  var hero = div('landing-hero');
+  var logo = div('landing-logo'); logo.textContent = '🤝';
+  ap(hero, [
+    logo,
+    p('Community Connect','t-title','margin-bottom:6px;'),
+    p('Services for everyone — from daily errands to professional help, connecting seniors and families with trusted providers.','t-sub','line-height:1.6;'),
+  ]);
+  ap(screen, hero);
+
+  var feats = [['🚗','Transport'],['🌿','Landscaping'],['🔧','Handyman'],['🎉','Events'],['🏠','Care & home'],['📦','Rentals']];
+  var fg = div('feat-grid');
+  feats.forEach(function(f){
+    var fi = div('feat-item');
+    fi.appendChild(div('feat-icon','').appendChild ? (function(){ var d=div('feat-icon'); d.textContent=f[0]; return d; })() : null);
+    var d = div('feat-item');
+    var ic = mk('div',{class:'feat-icon'}); ic.textContent=f[0];
+    var lb = mk('div'); lb.textContent=f[1]; lb.style.fontSize='11px';
+    d.appendChild(ic); d.appendChild(lb);
+    fg.appendChild(d);
+  });
+  ap(screen, fg);
+
+  var actions = div('', [
+    btn('Create an account','btn-primary',function(){ goAuth('register'); },'margin-bottom:10px;'),
+    btn('Log in','btn-secondary',function(){ goAuth('login'); }),
+  ]);
+  ap(screen, actions);
+
+  // Demo badge
+  var db = div('demo-badge','');
+  db.style.marginTop = '20px';
+  var dbt = mk('div',{class:'db-title'}); dbt.textContent='Demo accounts';
+  var di1 = mk('div',{class:'db-item'}); di1.innerHTML='<b>Seeker:</b> jc@example.com';
+  var di2 = mk('div',{class:'db-item'}); di2.innerHTML='<b>Provider:</b> ramon@example.com';
+  var di3 = mk('div',{class:'db-item'}); di3.innerHTML='<b>Admin:</b> admin@example.com';
+  var di4 = mk('div',{class:'db-item','style':'color:var(--c-text-3);margin-top:4px;font-size:10px;'}); di4.textContent='Any password works';
+  ap(db,[dbt,di1,di2,di3,di4]);
+  screen.appendChild(db);
+}
+
+function renderLogin(phone) {
+  var hdr = div('auth-header');
+  var backB = mk('button',{class:'back-btn'}); backB.onclick=function(){ goAuth('landing'); };
+  ap(backB,[svgIcon('back'),span('Back')]);
+  hdr.appendChild(backB); phone.appendChild(hdr);
+
+  var body = div('auth-body');
+  ap(body, p('Welcome back','t-head','margin-bottom:4px;'));
+  ap(body, p('Sign in to your account','t-sub','margin-bottom:24px;'));
+
+  var emailInp = inpField('email','your@email.com',AUTH.loginEmail,function(e){ AUTH.loginEmail=e.target.value; });
+  var passInp  = inpField('password','Password',AUTH.loginPassword,function(e){ AUTH.loginPassword=e.target.value; });
+  passInp.style.marginBottom='6px';
+
+  ap(body,[
+    inputWrap('Email address', emailInp),
+    inputWrap('Password', passInp),
+  ]);
+
+  var forgot = mk('div',{style:'text-align:right;margin-bottom:24px;'});
+  var fl = mk('span',{style:'font-size:12px;color:var(--c-accent);cursor:pointer;'}); fl.textContent='Forgot password?';
+  forgot.appendChild(fl); body.appendChild(forgot);
+
+  body.appendChild(btn('Log in','btn-primary',doLogin,'margin-bottom:12px;'));
+
+  var regRow = mk('div',{style:'text-align:center;'});
+  var rl = mk('span',{style:'font-size:13px;color:var(--c-text-2);'}); rl.textContent="Don't have an account? ";
+  var rlLink = mk('span',{style:'color:var(--c-accent);cursor:pointer;font-weight:500;'}); rlLink.textContent='Sign up'; rlLink.onclick=function(){ goAuth('register'); };
+  regRow.appendChild(rl); regRow.appendChild(rlLink);
+  body.appendChild(regRow);
+
+  phone.appendChild(body);
+}
+
+function renderRegister(phone) {
+  var hdr = div('auth-header');
+  var backB = mk('button',{class:'back-btn'}); backB.onclick=function(){ goAuth('landing'); };
+  ap(backB,[svgIcon('back'),span('Back')]);
+  hdr.appendChild(backB); phone.appendChild(hdr);
+
+  var body = div('auth-body');
+  // progress
+  var pw = div('progress-wrap'); var pf = div('progress-fill'); pf.style.width='25%'; pw.appendChild(pf); body.appendChild(pw);
+
+  ap(body,[
+    p('Create your account','t-head','margin-bottom:4px;'),
+    p('Step 1 of 4 — Basic details','t-sub','margin-bottom:24px;'),
+  ]);
+
+  var r = AUTH.reg;
+  var nameInp  = inpField('text','Your full name',r.name,function(e){ r.name=e.target.value; });
+  var mobInp   = inpField('tel','e.g. 0917 123 4567',r.mobile,function(e){ r.mobile=e.target.value; });
+  var emailInp = inpField('email','your@email.com',r.email,function(e){ r.email=e.target.value; });
+
+  // password with show/hide
+  var passWrap = div('',{style:'position:relative;'});
+  var passInp = inpField('password','At least 6 characters',r.password,function(e){ r.password=e.target.value; });
+  passInp.id = 'reg-pass';
+  var showBtn = mk('button',{style:'position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--c-text-3);'});
+  showBtn.appendChild(svgIcon('eye')); showBtn.style.display='inline-flex'; showBtn.style.alignItems='center';
+  var showing = false;
+  showBtn.onclick=function(){ showing=!showing; passInp.type=showing?'text':'password'; showBtn.innerHTML=''; showBtn.appendChild(svgIcon(showing?'eye_off':'eye')); };
+  passWrap.appendChild(passInp); passWrap.appendChild(showBtn);
+
+  ap(body,[
+    inputWrap('Full name', nameInp),
+    inputWrap('Mobile number', mobInp),
+    inputWrap('Email address', emailInp),
+  ]);
+  var pw2 = div('input-wrap'); ap(pw2,[mk('label',{class:'t-label'},'Password'),passWrap]);
+  body.appendChild(pw2);
+  body.appendChild(p('Your password must be at least 6 characters.','t-note','margin-bottom:20px;'));
+  body.appendChild(btn('Continue','btn-primary',doRegister));
+
+  var loginRow = mk('div',{style:'text-align:center;margin-top:12px;'});
+  var ll = mk('span',{style:'font-size:13px;color:var(--c-text-2);'}); ll.textContent='Already have an account? ';
+  var llLink = mk('span',{style:'color:var(--c-accent);cursor:pointer;font-weight:500;'}); llLink.textContent='Log in'; llLink.onclick=function(){ goAuth('login'); };
+  loginRow.appendChild(ll); loginRow.appendChild(llLink);
+  body.appendChild(loginRow);
+  phone.appendChild(body);
+}
+
+function renderOtp(phone) {
+  var body = div('auth-body','');
+  body.style.paddingTop = '32px';
+
+  var pw = div('progress-wrap'); var pf = div('progress-fill'); pf.style.width='50%'; pw.appendChild(pf); body.appendChild(pw);
+
+  var ic = mk('div',{style:'font-size:40px;text-align:center;margin-bottom:16px;'}); ic.textContent='📱';
+  ap(body,[
+    ic,
+    p('Verify your number','t-head','margin-bottom:4px;text-align:center;'),
+    p('We sent a 6-digit code to '+AUTH.reg.mobile,'t-sub','margin-bottom:24px;text-align:center;'),
+  ]);
+
+  // 6 OTP boxes (simulated)
+  var otpRow = div('otp-row');
+  var code = AUTH.otpVerified ? '123456' : '      ';
+  for (var i=0;i<6;i++) {
+    var box = mk('input',{class:'otp-box',type:'text',maxlength:'1'});
+    box.value = AUTH.otpVerified ? code[i].trim() : '';
+    if (AUTH.otpVerified) { box.classList.add('filled'); }
+    otpRow.appendChild(box);
+  }
+  body.appendChild(otpRow);
+
+  if (AUTH.otpVerified) {
+    var ok = mk('div',{style:'display:flex;align-items:center;justify-content:center;gap:6px;color:var(--c-success);font-size:13px;margin-bottom:20px;'});
+    ok.appendChild(svgIcon('check')); ok.appendChild(span('Number verified'));
+    body.appendChild(ok);
+  } else {
+    body.appendChild(p('Verifying your number automatically...','t-note','text-align:center;margin-bottom:20px;'));
+  }
+
+  var contBtn = btn('Continue','btn-primary',confirmOtp);
+  if (!AUTH.otpVerified) { contBtn.disabled=true; contBtn.style.opacity='0.5'; contBtn.style.cursor='not-allowed'; }
+  body.appendChild(contBtn);
+
+  var resend = mk('div',{style:'text-align:center;margin-top:12px;'});
+  var rl = mk('span',{style:'font-size:13px;color:var(--c-accent);cursor:pointer;'}); rl.textContent="Didn't receive it? Resend";
+  resend.appendChild(rl); body.appendChild(resend);
+  phone.appendChild(body);
+}
+
+function renderRoleSelect(phone) {
+  var body = div('auth-body');
+  var pw = div('progress-wrap'); var pf = div('progress-fill'); pf.style.width='75%'; pw.appendChild(pf); body.appendChild(pw);
+
+  ap(body,[
+    p('How will you use Community Connect?','t-head','margin-bottom:4px;'),
+    p('Step 3 of 4 — Choose your role','t-sub','margin-bottom:24px;'),
+  ]);
+
+  var roles = [
+    {id:'seeker',   icon:'🔍', title:'Service seeker',   desc:'Book transport, handymen, caregivers, event helpers, and more. Perfect for seniors and their families.'},
+    {id:'provider', icon:'🛠', title:'Service provider', desc:'List your services, set your own rates, manage your schedule, and grow your client base.'},
+  ];
+
+  roles.forEach(function(role){
+    var rc = div('role-card');
+    var ico = mk('div',{class:'role-icon'}); ico.textContent=role.icon;
+    var info = div('');
+    ap(info,[p(role.title,'role-title'), p(role.desc,'role-desc')]);
+    rc.appendChild(ico); rc.appendChild(info);
+    rc.onclick=function(){ setRole(role.id); };
+    body.appendChild(rc);
+  });
+
+  phone.appendChild(body);
+}
+
+function renderSeekerOnboard(phone) {
+  var body = div('auth-body');
+  var pw = div('progress-wrap'); var pf = div('progress-fill'); pf.style.width='87.5%'; pw.appendChild(pf); body.appendChild(pw);
+
+  ap(body,[
+    p('Who are you booking for?','t-head','margin-bottom:4px;'),
+    p('Step 3b — Booking preference','t-sub','margin-bottom:24px;'),
+  ]);
+
+  var opts = [
+    {id:'self',      icon:'🙋', title:'Myself',             desc:'I will personally be using the services I book.'},
+    {id:'dependent', icon:'👴', title:'A family member',    desc:'I am booking on behalf of a parent, grandparent, or someone I care for.'},
+  ];
+
+  opts.forEach(function(opt){
+    var rc = div('role-card');
+    var ico = mk('div',{class:'role-icon'}); ico.textContent=opt.icon;
+    var info = div('');
+    ap(info,[p(opt.title,'role-title'), p(opt.desc,'role-desc')]);
+    rc.appendChild(ico); rc.appendChild(info);
+    rc.onclick=function(){ setSeekerFor(opt.id); };
+    body.appendChild(rc);
+  });
+
+  var skip = mk('div',{style:'text-align:center;margin-top:16px;'});
+  var sl = mk('span',{style:'font-size:13px;color:var(--c-text-3);cursor:pointer;'}); sl.textContent="I'll decide later";
+  sl.onclick=function(){ AUTH.reg.bookingFor='self'; finishReg(); };
+  skip.appendChild(sl); body.appendChild(skip);
+  phone.appendChild(body);
+}
+
+function renderDependentSetup(phone) {
+  var body = div('auth-body');
+  var pw = div('progress-wrap'); var pf = div('progress-fill'); pf.style.width='93.75%'; pw.appendChild(pf); body.appendChild(pw);
+
+  ap(body,[
+    p('Add a dependent profile','t-head','margin-bottom:4px;'),
+    p('Step 4 of 4 — Their details','t-sub','margin-bottom:8px;'),
+    p("This name will appear when you book services on their behalf. You can add more profiles from your account settings.",'t-note','margin-bottom:24px;'),
+  ]);
+
+  var d = AUTH.newDep;
+  var nameInp = inpField('text','e.g. Maria Santos', d.name, function(e){ d.name=e.target.value; });
+  var relInp  = inpField('text','e.g. Mother, Father, Grandparent', d.relationship, function(e){ d.relationship=e.target.value; });
+  var noteTa  = mk('textarea',{class:'input-field',placeholder:'e.g. Needs wheelchair access, prefers morning appointments...',rows:'3'});
+  noteTa.value = d.notes||'';
+  noteTa.oninput=function(e){ d.notes=e.target.value; };
+  noteTa.style.paddingTop='10px'; noteTa.style.paddingBottom='10px'; noteTa.style.height='auto';
+
+  ap(body,[
+    inputWrap("Dependent's full name", nameInp),
+    inputWrap('Your relationship to them', relInp),
+    inputWrap('Notes for providers (optional)', noteTa),
+  ]);
+
+  body.appendChild(btn('Save and finish','btn-primary',addDependent,'margin-bottom:10px;'));
+  var skip = mk('div',{style:'text-align:center;'});
+  var sl = mk('span',{style:'font-size:13px;color:var(--c-text-3);cursor:pointer;'}); sl.textContent='Skip for now';
+  sl.onclick=function(){ finishReg(); };
+  skip.appendChild(sl); body.appendChild(skip);
+  phone.appendChild(body);
+}
+
+// stub screens after login
+function renderSeekerHome(phone) {
+  var u = AUTH.currentUser;
+  var scr = div('phone-screen');
+
+  // topbar
+  var tb = mk('div',{style:'display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;'});
+  var tbl = div('');
+  ap(tbl,[p('Good morning 👋',null,'font-size:12px;color:var(--c-text-2);'), p(u.name,'t-head','margin:0;')]);
+  var ava = div('avatar av-md av-accent'); ava.textContent=u.initials; ava.style.cursor='pointer'; ava.title='Log out'; ava.onclick=function(){ if(confirm('Log out?')) doLogout(); };
+  ap(tb,[tbl,ava]); scr.appendChild(tb);
+
+  // booking for chip
+  var bfor = mk('div',{style:'display:inline-flex;align-items:center;gap:6px;background:var(--c-accent-light);border-radius:var(--r-full);padding:6px 12px;margin-bottom:20px;font-size:12px;color:var(--c-accent);'});
+  var dep = u.dependents&&u.dependents.length>0?u.dependents[0]:null;
+  bfor.textContent = '📋 Booking for: '+(dep?dep.name+' ('+dep.relationship+')':u.name);
+  scr.appendChild(bfor);
+
+  // info banner
+  var banner = mk('div',{style:'background:var(--c-accent);color:#fff;border-radius:var(--r-lg);padding:16px;margin-bottom:24px;'});
+  banner.innerHTML='<div style="font-size:11px;opacity:.8;margin-bottom:4px;">COMMUNITY CONNECT</div><div style="font-size:16px;font-weight:600;margin-bottom:2px;">Seeker home screen</div><div style="font-size:12px;opacity:.85;">Browse, book, chat and manage appointments — screens coming next in the build.</div>';
+  scr.appendChild(banner);
+
+  var note = div('card-border');
+  note.innerHTML='<div style="font-size:13px;font-weight:500;margin-bottom:6px;">✅ Registration complete</div><div style="font-size:12px;color:var(--c-text-2);">You are logged in as <b>'+u.name+'</b> ('+u.role+'). The full seeker screen suite will be built in the next phase — including browse, provider profiles, booking, chat, and rental flows.</div>';
+  scr.appendChild(note);
+
+  phone.appendChild(scr);
+
+  // bottom nav
+  var nav = div('phone-nav');
+  var tabs = [{icon:'home',label:'Home'},{icon:'search',label:'Search'},{icon:'book',label:'Bookings'},{icon:'chat',label:'Chat'},{icon:'user',label:'Profile'}];
+  tabs.forEach(function(t,i){
+    var tab = div('nav-tab'+(i===0?' active':''));
+    tab.appendChild(svgIcon(t.icon));
+    ap(tab,[span(t.label)]);
+    nav.appendChild(tab);
+  });
+  phone.appendChild(nav);
+}
+
+function renderProviderHome(phone) {
+  var u = AUTH.currentUser;
+  var scr = div('phone-screen');
+
+  var tb = mk('div',{style:'display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;'});
+  var tbl = div('');
+  ap(tbl,[p('Provider dashboard',null,'font-size:12px;color:var(--c-text-2);'), p(u.name,'t-head','margin:0;')]);
+  var ava = div('avatar av-md av-accent'); ava.textContent=u.initials; ava.style.cursor='pointer'; ava.title='Log out'; ava.onclick=function(){ if(confirm('Log out?')) doLogout(); };
+  ap(tb,[tbl,ava]); scr.appendChild(tb);
+
+  var banner = mk('div',{style:'background:var(--c-success);color:#fff;border-radius:var(--r-lg);padding:16px;margin-bottom:24px;'});
+  banner.innerHTML='<div style="font-size:11px;opacity:.8;margin-bottom:4px;">COMMUNITY CONNECT</div><div style="font-size:16px;font-weight:600;margin-bottom:2px;">Provider home screen</div><div style="font-size:12px;opacity:.85;">Jobs, calendar, wallet, analytics, and availability — screens coming next in the build.</div>';
+  scr.appendChild(banner);
+
+  var note = div('card-border');
+  note.innerHTML='<div style="font-size:13px;font-weight:500;margin-bottom:6px;">✅ Registration complete</div><div style="font-size:12px;color:var(--c-text-2);">You are logged in as <b>'+u.name+'</b> (provider). The full provider screen suite — rates, calendar, jobs, wallet, rental inbox — will be built in the next phase.</div>';
+  scr.appendChild(note);
+
+  phone.appendChild(scr);
+
+  var nav = div('phone-nav');
+  var tabs=[{icon:'dash',label:'Home'},{icon:'jobs',label:'Jobs'},{icon:'cal',label:'Calendar'},{icon:'wallet',label:'Wallet'},{icon:'user',label:'Profile'}];
+  tabs.forEach(function(t,i){
+    var tab=div('nav-tab'+(i===0?' active':''));
+    tab.appendChild(svgIcon(t.icon));
+    ap(tab,[span(t.label)]);
+    nav.appendChild(tab);
+  });
+  phone.appendChild(nav);
+}
+
+function renderAdminHome(phone) {
+  var u = AUTH.currentUser;
+  var scr = div('phone-screen');
+
+  var tb = mk('div',{style:'display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;'});
+  ap(tb,[p(u.name+' · '+pill('Admin','pill-admin').outerHTML,'t-head','margin:0;'),
+         (function(){ var a=div('avatar av-md'); a.style.background='var(--c-admin-light)'; a.style.color='var(--c-admin)'; a.textContent=u.initials; a.style.cursor='pointer'; a.onclick=function(){ if(confirm('Log out?')) doLogout(); }; return a; })()]);
+  scr.appendChild(tb);
+
+  var banner = mk('div',{style:'background:var(--c-admin);color:#fff;border-radius:var(--r-lg);padding:16px;margin-bottom:24px;'});
+  banner.innerHTML='<div style="font-size:11px;opacity:.8;margin-bottom:4px;">COMMUNITY CONNECT · ADMIN</div><div style="font-size:16px;font-weight:600;margin-bottom:2px;">Admin console</div><div style="font-size:12px;opacity:.85;">Switch to Desktop view above to see the full SaaS admin dashboard.</div>';
+  scr.appendChild(banner);
+
+  var note = div('card-border');
+  note.innerHTML='<div style="font-size:13px;font-weight:500;margin-bottom:6px;">✅ Logged in as admin</div><div style="font-size:12px;color:var(--c-text-2);">Full admin mobile screens (users, providers, disputes, audit log) will be built in the next phase. For now, click <b>Desktop</b> in the module switcher above to see the desktop admin dashboard stub.</div>';
+  scr.appendChild(note);
+
+  phone.appendChild(scr);
+}
+
+// ─── DESKTOP SHELL ────────────────────────────────────────────────
+function renderDesktop(app) {
+  var shell = div('desktop-shell');
+
+  // Topbar
+  var topbar = div('desktop-topbar');
+  var logo = mk('div',{style:'display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;color:var(--c-accent);'});
+  logo.innerHTML='<span style="font-size:20px;">🤝</span> Community Connect';
+  var loggedAs = mk('div',{style:'margin-left:auto;display:flex;align-items:center;gap:10px;'});
+  if (AUTH.isLoggedIn && AUTH.currentUser) {
+    loggedAs.innerHTML='<span style="font-size:12px;color:var(--c-text-2);">Logged in as <b>'+AUTH.currentUser.name+'</b></span>';
+    var lb = mk('button',{class:'btn btn-sm btn-secondary',style:'width:auto;'}); lb.textContent='Log out'; lb.onclick=doLogout; loggedAs.appendChild(lb);
+  } else {
+    var loginB=mk('button',{class:'btn btn-sm btn-primary',style:'width:auto;'}); loginB.textContent='Log in'; loginB.onclick=function(){ MODULE='mobile'; switchModule('mobile'); goAuth('login'); }; loggedAs.appendChild(loginB);
+  }
+  ap(topbar,[logo,loggedAs]); shell.appendChild(topbar);
+
+  // Body
+  var body = div('desktop-body');
+
+  // Sidebar
+  var sidebar = div('desktop-sidebar');
+  var sidebarSections = [
+    { label:'Operations', items:[
+      {id:'dashboard', icon:'dash',     label:'Dashboard'},
+      {id:'bookings',  icon:'book',     label:'Bookings'},
+      {id:'calendar',  icon:'cal',      label:'Booking calendar'},
+      {id:'dispatch',  icon:'chart',    label:'Dispatch board'},
+    ]},
+    { label:'CRM', items:[
+      {id:'providers', icon:'users',    label:'Provider CRM'},
+      {id:'customers', icon:'user',     label:'Customer CRM'},
+      {id:'messaging', icon:'chat',     label:'Messaging center'},
+    ]},
+    { label:'Finance', items:[
+      {id:'accounting',icon:'wallet',   label:'Accounting'},
+      {id:'analytics', icon:'chart',    label:'Analytics'},
+    ]},
+    { label:'System', items:[
+      {id:'audit',     icon:'log',      label:'Audit logs'},
+      {id:'disputes',  icon:'flag',     label:'Disputes'},
+      {id:'settings',  icon:'settings', label:'Settings'},
+    ]},
+  ];
+
+  sidebarSections.forEach(function(section){
+    var lbl=mk('div',{class:'desktop-section-title'}); lbl.textContent=section.label; sidebar.appendChild(lbl);
+    section.items.forEach(function(item){
+      var si=mk('div',{class:'sidebar-item'+(DESKTOP.activeModule===item.id?' active':'')});
+      si.appendChild(svgIcon(item.icon));
+      si.appendChild(span(item.label));
+      si.onclick=function(){ DESKTOP.activeModule=item.id; renderDesktop(app); };
+      sidebar.appendChild(si);
+    });
+  });
+  body.appendChild(sidebar);
+
+  // Content
+  var content = div('desktop-content');
+  renderDesktopModule(content);
+  body.appendChild(content);
+  shell.appendChild(body);
+  app.appendChild(shell);
+}
+
+function renderDesktopModule(content) {
+  var mod = DESKTOP.activeModule;
+
+  if (mod === 'dashboard') {
+    // Operations Dashboard
+    var hdr=mk('div',{style:'display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;'});
+    ap(hdr,[p('Operations Dashboard','t-title'),mk('span',{style:'font-size:13px;color:var(--c-text-2);'},'Jul 15, 2026 · Live')]);
+    content.appendChild(hdr);
+
+    var kpi = div('kpi-grid');
+    var kpis=[
+      {label:'Total bookings today',  value:'47',     delta:'+12% vs yesterday', up:true},
+      {label:'Active providers',      value:'124',    delta:'+3 this week',       up:true},
+      {label:'Open disputes',         value:'3',      delta:'−1 vs yesterday',   up:true},
+      {label:'Platform fees (today)', value:'₱4,830', delta:'+8% vs yesterday',  up:true},
+    ];
+    kpis.forEach(function(k){
+      var kc=div('kpi-card');
+      ap(kc,[p(k.label,'kpi-label'),p(k.value,'kpi-value'),mk('div',{class:'kpi-delta '+(k.up?'up':'down')},k.delta)]);
+      kpi.appendChild(kc);
+    });
+    content.appendChild(kpi);
+
+    // Recent bookings table
+    var tCard=mk('div',{style:'background:var(--c-surface);border-radius:var(--r-lg);border:1px solid var(--c-border);overflow:hidden;margin-bottom:24px;'});
+    var th=mk('div',{style:'padding:16px 20px;border-bottom:1px solid var(--c-border);display:flex;justify-content:space-between;align-items:center;'});
+    ap(th,[p('Recent bookings',null,'font-weight:600;'), pill('Live','pill-success')]);
+    tCard.appendChild(th);
+    var table=mk('table',{class:'dt-table'});
+    var thead=mk('thead');
+    thead.innerHTML='<tr><th>Booking ID</th><th>Seeker</th><th>Provider</th><th>Service</th><th>Amount</th><th>Status</th><th>Time</th></tr>';
+    table.appendChild(thead);
+    var tbody=mk('tbody');
+    var rows=[
+      {id:'B-00123',seeker:'Elena Santos',provider:'Ramon D.',service:'Airport pickup',amount:'₱900',status:'accepted',time:'06:14 AM'},
+      {id:'B-00122',seeker:'James T.',provider:'GreenTouch',service:'Garden maintenance',amount:'₱800',status:'pending',time:'Yesterday'},
+      {id:'B-00121',seeker:'Marie P.',provider:'Tito Boy Repairs',service:'Handyman',amount:'₱250',status:'dispute',time:'Yesterday'},
+      {id:'B-00120',seeker:'Ana Cruz',provider:'Liza M.',service:'Babysitting',amount:'₱600',status:'completed',time:'Jun 18'},
+      {id:'B-00119',seeker:'Rico B.',provider:'Fiesta Events',service:'Birthday package',amount:'₱15,000',status:'accepted',time:'Jun 17'},
+    ];
+    rows.forEach(function(r){
+      var statusCls=r.status==='accepted'?'pill-success':r.status==='pending'?'pill-warning':r.status==='dispute'?'pill-danger':r.status==='completed'?'pill-accent':'pill-neutral';
+      var tr=mk('tr');
+      tr.innerHTML='<td style="font-family:monospace;font-size:12px;color:var(--c-text-2);">'+r.id+'</td><td>'+r.seeker+'</td><td>'+r.provider+'</td><td>'+r.service+'</td><td style="font-weight:500;">'+r.amount+'</td><td><span class="pill '+statusCls+'">'+r.status+'</span></td><td style="color:var(--c-text-3);font-size:12px;">'+r.time+'</td>';
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    tCard.appendChild(table);
+    content.appendChild(tCard);
+
+    // Dispute alerts
+    var alerts=mk('div',{style:'background:var(--c-danger-light);border:1px solid var(--c-danger);border-radius:var(--r-lg);padding:16px 20px;'});
+    alerts.innerHTML='<div style="font-weight:600;color:var(--c-danger);margin-bottom:10px;">⚠️ 3 open disputes require attention</div><div style="font-size:13px;color:var(--c-text-2);">B-00121 · Marie P. vs Tito Boy Repairs · Quality issue · Reported 2 hours ago</div>';
+    content.appendChild(alerts);
+
+  } else {
+    // Stub for other modules
+    var names={bookings:'Bookings',calendar:'Booking Calendar',dispatch:'Dispatch Board',providers:'Provider CRM',customers:'Customer CRM',messaging:'Messaging Center',accounting:'Accounting',analytics:'Analytics',audit:'Audit Logs',disputes:'Disputes',settings:'Settings'};
+    var icons={bookings:'📋',calendar:'📅',dispatch:'🗺',providers:'👥',customers:'👤',messaging:'💬',accounting:'💰',analytics:'📊',audit:'📝',disputes:'⚠️',settings:'⚙️'};
+    content.appendChild(p((icons[mod]||'📄')+' '+( names[mod]||mod),'t-title','margin-bottom:8px;'));
+    content.appendChild(p('This module is queued for the next build phase. The structure, sidebar navigation, and data tables will be filled in as we progress through the screen inventory.','t-sub','margin-bottom:24px;'));
+    var stub=mk('div',{style:'background:var(--c-surface);border:2px dashed var(--c-border-md);border-radius:var(--r-lg);padding:48px;text-align:center;'});
+    stub.innerHTML='<div style="font-size:40px;margin-bottom:12px;">'+(icons[mod]||'📄')+'</div><div style="font-size:15px;font-weight:600;margin-bottom:6px;">'+(names[mod]||mod)+' module</div><div style="font-size:13px;color:var(--c-text-2);">Coming in the next build phase</div>';
+    content.appendChild(stub);
+  }
+}
+
+// ─── MAIN RENDER ──────────────────────────────────────────────────
+function render() {
+  var app = document.getElementById('app');
+  app.innerHTML = '';
+
+  if (MODULE === 'desktop') {
+    renderDesktop(app);
+    return;
+  }
+
+  // Mobile — phone frame wrapper
+  var wrap = div('phone-wrap');
+  var phone = div('phone');
+
+  if (!AUTH.isLoggedIn) {
+    // Auth screens (no bottom nav)
+    var scr = div('phone-screen');
+    if (AUTH.screen === 'landing')         renderLanding(scr);
+    else if (AUTH.screen === 'login')      renderLogin(phone);
+    else if (AUTH.screen === 'register')   renderRegister(phone);
+    else if (AUTH.screen === 'otp')        renderOtp(phone);
+    else if (AUTH.screen === 'role')       renderRoleSelect(phone);
+    else if (AUTH.screen === 'seekerOnboard') renderSeekerOnboard(phone);
+    else if (AUTH.screen === 'dependentSetup') renderDependentSetup(phone);
+    else renderLanding(scr);
+    if (AUTH.screen === 'landing') phone.appendChild(scr);
+  } else {
+    var u = AUTH.currentUser;
+    if (u.role === 'seeker')   renderSeekerHome(phone);
+    else if (u.role === 'provider') renderProviderHome(phone);
+    else if (u.role === 'admin')    renderAdminHome(phone);
+    else renderSeekerHome(phone);
+  }
+
+  wrap.appendChild(phone);
+  app.appendChild(wrap);
+}
+
+render();
+</script>
+</body>
+</html>
