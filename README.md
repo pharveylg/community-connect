@@ -1,36 +1,112 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Community Connect
 
-## Getting Started
+A mobile-first marketplace for everyday local services in the Philippines —
+connecting **seekers** (including seniors and people booking for family
+members) with **providers** (transport, handyman, errands, cleaning, gardening,
+care, events — **and services providers invent themselves**, like trash
+pickup or junk & scrap hauling).
 
-First, run the development server:
+**How money works:** Community Connect is a listing & connectivity service.
+Payments happen **directly between seeker and provider** (cash, GCash, Maya) —
+the app never holds seeker money. Providers get a **free tier** (active
+listings + free accepted bookings each month) and will be able to top up
+credits for extras (more slots, boosts, unlimited accepts).
+
+All prices in Philippine Pesos (PHP).
+
+---
+
+## Stack
+
+- **Next.js 16** (App Router, Server Actions) + React 19 + Tailwind CSS v4 + TypeScript
+- **Firebase** — Auth (client SDK, email/password), Firestore via the **Admin
+  SDK on the server only**; session cookies are httpOnly (14 days, revocation checked)
+- **Zod 4** schemas shared between client and server
+
+Architecture rule: the browser only ever talks to Firebase **Auth**. Every
+Firestore read/write goes through Server Actions using the Admin SDK, so the
+client-side Firestore rules are deny-all (defense in depth).
+
+## Getting started
 
 ```bash
+npm install
+cp .env.example .env.local   # fill in your Firebase config (both blocks)
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Firebase project setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Create a project at the [Firebase console](https://console.firebase.google.com).
+2. **Auth**: enable the Email/Password provider.
+3. **Web app config**: Project settings → General → Your apps → Web app — copy
+   the values into the `NEXT_PUBLIC_FIREBASE_*` variables.
+4. **Admin SDK**: Project settings → Service accounts → *Generate new private
+   key* — copy `project_id`, `client_email`, and `private_key` into the
+   `FIREBASE_*` variables (keep the `\n` escapes in the private key as-is).
+5. **Firestore**: create a Firestore database (production mode). No composite
+   indexes are required. Client rules in `firestore.rules` deny all direct
+   access — deploy them with `firebase deploy --only firestore:rules` if you
+   change them.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Creating the first admin
 
-## Learn More
+Admins **cannot be created through the app** — the public role-selection
+action only accepts `seeker` or `provider`. To bootstrap an admin:
 
-To learn more about Next.js, take a look at the following resources:
+1. Register a normal account through the app (choose any role).
+2. In the Firebase console → Firestore → find `profiles/{yourUid}`.
+3. Set the field `role` to `"admin"`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+After that, admins can manage other users' roles via the admin-only server
+action (`changeUserRole` in `app/actions/admin.ts`); the admin console UI is
+coming in a later build.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Scripts
 
-## Deploy on Vercel
+| Command | What it does |
+|---|---|
+| `npm run dev` | Dev server |
+| `npm run build` | Production build |
+| `npm run start` | Serve the production build |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | TypeScript, no emit |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+CI (GitHub Actions, `.github/workflows/ci.yml`) runs lint + typecheck + build
+on every push/PR.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deploying (Vercel)
+
+1. Push this repo to GitHub and import it in Vercel.
+2. Add all the environment variables from `.env.local` in the project settings.
+3. Deploy — no other configuration needed.
+
+## Project layout
+
+```
+app/                    Next.js App Router
+  (app)/                Authenticated area (header + session required)
+    seeker/             Seeker home = browse services (category filter)
+    provider/           Provider dashboard + create/pause services
+    admin/              Admin stub (full console coming later)
+  actions/              Server Actions (auth, services, admin)
+  login/ register/ onboarding/
+lib/                    Firebase clients, Firestore data layer, validation,
+                        service catalog + freemium entitlements, session, DAL
+firestore.rules         Deny-all client rules (all access via Admin SDK)
+```
+
+## Status & roadmap
+
+Built: auth + onboarding (incl. resume-after-interruption), role guardrails
+(no self-serve admin), provider service listings **with custom services**,
+seeker browse with category filters, freemium free-tier limits.
+
+Next: booking request → accept flow with the accept-fee ledger, provider
+credits/wallet + manual top-up approval, verification badges, SMS
+notifications, ratings with job-done confirmation, admin console with audit
+log.
+
+Deliberately deferred: in-app seeker payments (off-platform by design),
+rentals/professional-services categories, VAT/BIR accounting module (pending
+the principal-vs-agent question).

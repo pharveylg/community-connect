@@ -12,17 +12,20 @@ import {
 } from "@/lib/firestore";
 import { createSession, deleteSession } from "@/lib/session";
 import { verifySession } from "@/lib/dal";
+import { roleHomePath } from "@/lib/roles";
+import { normalizePhMobile } from "@/lib/validation";
 import {
+  CompleteProfileSchema,
   DependentSchema,
   RegisterBasicInfoSchema,
   type DependentInput,
 } from "@/lib/validation";
 
-function roleHomePath(role: Role | null) {
-  if (role === "provider") return "/provider";
-  if (role === "admin") return "/admin";
-  return "/seeker";
-}
+// Roles a user may pick for THEMSELVES. Admin is deliberately absent: the
+// public setRole action must never accept "admin" — granting admin is
+// admin-only (see app/actions/admin.ts) or done by seeding the profile
+// directly (see README).
+export type SelfSelectableRole = Exclude<Role, "admin">;
 
 export async function registerAccount(
   idToken: string,
@@ -38,16 +41,48 @@ export async function registerAccount(
   }
 
   const decoded = await getAdminAuth().verifyIdToken(idToken);
-  await createProfile(decoded.uid, parsed.data);
+  await createProfile(decoded.uid, {
+    fullName: parsed.data.fullName,
+    mobile: normalizePhMobile(parsed.data.mobile)!,
+    email: parsed.data.email,
+  });
   await createSession(idToken);
   return { success: true as const };
+}
+
+export async function completeProfile(input: {
+  fullName: string;
+  mobile: string;
+}) {
+  const parsed = CompleteProfileSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid details." };
+  }
+
+  const { uid } = await verifySession();
+
+  // Guard against overwriting an existing profile (e.g. double submit).
+  const existing = await getProfile(uid);
+  if (existing) redirect(roleHomePath(existing.role));
+
+  const user = await getAdminAuth().getUser(uid);
+  await createProfile(uid, {
+    fullName: parsed.data.fullName,
+    mobile: normalizePhMobile(parsed.data.mobile)!,
+    email: user.email ?? "",
+  });
+  redirect("/onboarding?step=role");
 }
 
 export async function login(idToken: string) {
   await createSession(idToken);
   const { uid } = await verifySession();
   const profile = await getProfile(uid);
-  redirect(roleHomePath(profile?.role ?? null));
+  // Authenticated but profile incomplete (or role never chosen): resume
+  // onboarding instead of dead-ending in a redirect loop.
+  if (!profile) redirect("/onboarding");
+  if (!profile.role) redirect("/onboarding?step=role");
+  redirect(roleHomePath(profile.role));
 }
 
 export async function logout() {
@@ -55,8 +90,19 @@ export async function logout() {
   redirect("/login");
 }
 
-export async function setRole(role: Role) {
+export async function setRole(role: SelfSelectableRole) {
+  // Defense in depth: never let this public action grant admin.
+  if (role !== "seeker" && role !== "provider") {
+    throw new Error("Invalid role.");
+  }
+
   const { uid } = await verifySession();
+  const profile = await getProfile(uid);
+  // Admins keep their role; they manage the platform, not switch out of it.
+  if (profile?.role === "admin") {
+    return { error: "Admins cannot switch roles." };
+  }
+
   await updateProfile(uid, { role });
 
   if (role === "seeker") return { next: "seekerOnboard" as const };

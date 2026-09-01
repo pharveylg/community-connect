@@ -18,7 +18,9 @@ export default function proxy(req: NextRequest) {
   }
 
   if (isAuthRoute && hasSession) {
-    return NextResponse.redirect(new URL("/seeker", req.nextUrl));
+    // "/" routes by actual profile state (seeker/provider/admin/onboarding)
+    // instead of assuming every session belongs to a seeker.
+    return NextResponse.redirect(new URL("/", req.nextUrl));
   }
 
   return NextResponse.next();

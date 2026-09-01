@@ -20,6 +20,9 @@ export const verifySession = cache(async (): Promise<{ uid: string }> => {
 export const getCurrentProfile = cache(async (): Promise<Profile> => {
   const { uid } = await verifySession();
   const profile = await getProfile(uid);
-  if (!profile) redirect("/login");
+  // Valid session but no profile (e.g. registration was interrupted after the
+  // Firebase Auth user was created). Send them to complete their profile
+  // instead of /login, which would just bounce them back — a dead end.
+  if (!profile) redirect("/onboarding");
   return profile;
 });

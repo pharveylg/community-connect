@@ -1,19 +1,28 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { getProfile } from "@/lib/firestore";
+import { verifySession } from "@/lib/dal";
+import { roleHomePath } from "@/lib/roles";
 
 const FEATURES = [
   ["🚗", "Transport"],
-  ["🌿", "Landscaping"],
   ["🔧", "Handyman"],
-  ["🎉", "Events"],
-  ["🏠", "Care & home"],
-  ["📦", "Rentals"],
+  ["📦", "Errands"],
+  ["🧹", "Home cleaning"],
+  ["🌿", "Gardening"],
+  ["✨", "…and any service you can name"],
 ];
 
 export default async function Home() {
   if ((await cookies()).has("session")) {
-    redirect("/seeker");
+    // Verify for real (a stale/invalid cookie would bounce in verifySession)
+    // and route by profile state rather than assuming everyone is a seeker.
+    const { uid } = await verifySession();
+    const profile = await getProfile(uid);
+    if (!profile) redirect("/onboarding");
+    if (!profile.role) redirect("/onboarding?step=role");
+    redirect(roleHomePath(profile.role));
   }
 
   return (
@@ -27,8 +36,8 @@ export default async function Home() {
         </div>
         <h1 className="mb-1.5 text-2xl font-semibold tracking-tight">Community Connect</h1>
         <p className="mb-6 text-sm leading-relaxed" style={{ color: "var(--c-text-2)" }}>
-          Services for everyone — from daily errands to professional help, connecting
-          seniors and families with trusted providers.
+          Local, everyday services — from rides and repairs to trash pickup and
+          junk hauling. Seniors and families connect with trusted nearby providers.
         </p>
 
         <div className="mb-6 grid grid-cols-2 gap-2">
@@ -50,6 +59,12 @@ export default async function Home() {
             Log in
           </Link>
         </div>
+
+        <p className="mt-6 text-xs leading-relaxed" style={{ color: "var(--c-text-3)" }}>
+          Community Connect is a listing &amp; connectivity service. Payments are
+          made directly between you and your provider (cash, GCash, Maya) — we
+          never hold your money.
+        </p>
       </div>
     </div>
   );

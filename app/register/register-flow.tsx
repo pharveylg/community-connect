@@ -37,6 +37,19 @@ export function RegisterFlow() {
   const [depRelationship, setDepRelationship] = useState("");
   const [depNotes, setDepNotes] = useState("");
 
+  async function guard(fn: () => Promise<unknown>) {
+    // Wrap server-action calls so a network/server error never leaves the
+    // buttons stuck in a disabled "pending" state.
+    setError(null);
+    setPending(true);
+    try {
+      await fn();
+    } catch {
+      setError("Something went wrong. Please try again.");
+      setPending(false);
+    }
+  }
+
   async function handleBasicSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
@@ -74,25 +87,30 @@ export function RegisterFlow() {
   }
 
   async function handleSelectRole(role: "seeker" | "provider") {
-    setError(null);
-    setPending(true);
-    const result = await setRole(role);
-    if (result?.next === "seekerOnboard") {
-      setStep("seekerOnboard");
-      setPending(false);
-    }
-    // "provider" redirects server-side.
+    await guard(async () => {
+      const result = await setRole(role);
+      if (result?.error) {
+        setError(result.error);
+        setPending(false);
+        return;
+      }
+      if (result?.next === "seekerOnboard") {
+        setStep("seekerOnboard");
+        setPending(false);
+      }
+      // "provider" redirects server-side.
+    });
   }
 
   async function handleBookingFor(bookingFor: "self" | "dependent") {
-    setError(null);
-    setPending(true);
-    const result = await setBookingFor(bookingFor);
-    if (result?.next === "dependentSetup") {
-      setStep("dependentSetup");
-      setPending(false);
-    }
-    // "self" redirects server-side.
+    await guard(async () => {
+      const result = await setBookingFor(bookingFor);
+      if (result?.next === "dependentSetup") {
+        setStep("dependentSetup");
+        setPending(false);
+      }
+      // "self" redirects server-side.
+    });
   }
 
   async function handleDependentSubmit(e: FormEvent) {
@@ -110,8 +128,13 @@ export function RegisterFlow() {
     }
 
     setPending(true);
-    await addDependentAction(parsed.data);
-    // Redirects server-side.
+    try {
+      await addDependentAction(parsed.data);
+    } catch {
+      setError("Something went wrong. Please try again.");
+      setPending(false);
+    }
+    // Redirects server-side on success.
   }
 
   return (
@@ -184,7 +207,7 @@ export function RegisterFlow() {
                 id="password"
                 type="password"
                 className="cc-input"
-                placeholder="At least 6 characters"
+                placeholder="At least 8 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="new-password"
@@ -353,8 +376,7 @@ export function RegisterFlow() {
               style={{ color: "var(--c-text-3)" }}
               disabled={pending}
               onClick={() => {
-                setPending(true);
-                void skipDependentSetup();
+                void guard(() => skipDependentSetup());
               }}
             >
               Skip for now

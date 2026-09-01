@@ -134,6 +134,31 @@ body {
   background: var(--c-accent-light);
 }
 
+.cc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1.5px solid var(--c-border-md);
+  border-radius: var(--r-full);
+  background: var(--c-surface);
+  color: var(--c-text);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.cc-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--r-full);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
 .cc-error {
   font-size: 13px;
   color: var(--c-danger);
