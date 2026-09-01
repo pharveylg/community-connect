@@ -75,11 +75,43 @@ coming in a later build.
 CI (GitHub Actions, `.github/workflows/ci.yml`) runs lint + typecheck + build
 on every push/PR.
 
-## Deploying (Vercel)
+## PWA & APK packaging (no Play Store)
 
-1. Push this repo to GitHub and import it in Vercel.
-2. Add all the environment variables from `.env.local` in the project settings.
-3. Deploy — no other configuration needed.
+The app is a full PWA: `app/manifest.ts` (name, icons, standalone display),
+`public/sw.js` (network-first navigations with an `/offline` fallback page,
+cache-first static assets — Server Action POSTs are never intercepted), iOS
+web-app meta tags, and an in-page install prompt on the landing page
+(`app/install-button.tsx`).
+
+**Install as a PWA (Android/desktop):** visit the deployed URL in Chrome →
+"Install app" (or the in-page button). On iOS: Safari → Share → Add to Home
+Screen. No store, no fees.
+
+**Build a side-loadable APK** (wrap the live PWA):
+
+```bash
+npm i -g @bubblewrap/cli
+bubblewrap init --manifest https://YOUR-DOMAIN/manifest.webmanifest
+bubblewrap build
+```
+
+- Requires Node + JDK 17 (Bubblewrap offers to install the JDK/Android SDK
+  bits for you; Android Studio is NOT needed).
+- Produces `app-release-signed.apk` plus `assetlinks.json` — commit the
+  assetlinks file to `public/.well-known/` and redeploy so the APK opens
+  full-screen without a browser bar.
+- **Back up the generated signing keystore forever.** Updates only install
+  over an existing APK when signed with the same key; lose it and users must
+  uninstall first. (PWABuilder.com is a free GUI alternative.)
+- Decide your final domain *before* the first APK build — the assetlinks
+  file binds the APK to that domain.
+- Distribute the APK by direct link/Messenger/FB group; users enable
+  "Install unknown apps" for their browser once. Updates: bump the version,
+  rebuild with the same keystore, share the new file — Android offers
+  "Update".
+
+Note: the app is server-rendered, so both the PWA and the APK require the
+deployment to be live (they load it over HTTPS). They are not offline apps.
 
 ## Project layout
 

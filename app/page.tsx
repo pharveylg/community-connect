@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getProfile } from "@/lib/firestore";
 import { verifySession } from "@/lib/dal";
 import { roleHomePath } from "@/lib/roles";
+import { InstallButton } from "./install-button";
 
 const FEATURES = [
   ["🚗", "Transport"],
@@ -59,6 +60,8 @@ export default async function Home() {
             Log in
           </Link>
         </div>
+
+        <InstallButton />
 
         <p className="mt-6 text-xs leading-relaxed" style={{ color: "var(--c-text-3)" }}>
           Community Connect is a listing &amp; connectivity service. Payments are
