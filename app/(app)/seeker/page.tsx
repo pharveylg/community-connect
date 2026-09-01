@@ -2,12 +2,21 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentProfile } from "@/lib/dal";
 import { browseServices } from "@/lib/firestore";
+import { listSeekerBookings, type Booking } from "@/lib/bookings";
 import {
   SERVICE_CATEGORIES,
   LEAD_TIME_LABELS,
   formatRate,
   getCategory,
 } from "@/lib/catalog";
+import { cancelBookingAction } from "@/app/actions/bookings";
+
+const STATUS_STYLES: Record<Booking["status"], { bg: string; fg: string; label: string }> = {
+  pending: { bg: "#fff4e0", fg: "#8a5a00", label: "Waiting for provider" },
+  accepted: { bg: "#e7f4e9", fg: "#1e6b2e", label: "Accepted ✓" },
+  declined: { bg: "var(--c-danger-light)", fg: "var(--c-danger)", label: "Declined" },
+  cancelled: { bg: "var(--c-surface-2)", fg: "var(--c-text-2)", label: "Cancelled" },
+};
 
 export default async function SeekerHomePage({
   searchParams,
@@ -20,7 +29,19 @@ export default async function SeekerHomePage({
   const params = await searchParams;
   const rawCategory = typeof params.category === "string" ? params.category : undefined;
   const category = rawCategory ? getCategory(rawCategory) : undefined;
-  const services = await browseServices(category?.slug);
+  const banner = typeof params.booked === "string"
+    ? "Request sent — you'll see the provider's response below."
+    : typeof params.cancelled === "string"
+      ? "Request cancelled."
+      : typeof params.error === "string"
+        ? params.error
+        : null;
+
+  const [services, bookings] = await Promise.all([
+    browseServices(category?.slug),
+    listSeekerBookings(profile.uid),
+  ]);
+  const activeBookings = bookings.filter((b) => b.status === "pending" || b.status === "accepted");
 
   return (
     <div className="mx-auto w-full max-w-sm">
@@ -28,6 +49,54 @@ export default async function SeekerHomePage({
         Good morning 👋 {profile.bookingFor === "dependent" ? "(booking for a family member)" : ""}
       </p>
       <h1 className="mb-4 text-lg font-semibold">{profile.fullName}</h1>
+
+      {banner && (
+        <div className="cc-card mb-4 text-xs leading-relaxed" style={{ borderColor: "var(--c-accent)" }}>
+          {banner}
+        </div>
+      )}
+
+      {activeBookings.length > 0 && (
+        <div className="mb-5">
+          <h2 className="mb-2 text-sm font-semibold">My bookings</h2>
+          <div className="flex flex-col gap-2">
+            {activeBookings.map((b) => {
+              const st = STATUS_STYLES[b.status];
+              return (
+                <div key={b.id} className="cc-card">
+                  <div className="mb-1 flex items-start justify-between gap-2">
+                    <div className="text-sm font-semibold">{b.serviceTitle}</div>
+                    <span className="cc-badge" style={{ background: st.bg, color: st.fg }}>
+                      {st.label}
+                    </span>
+                  </div>
+                  <div className="text-xs" style={{ color: "var(--c-text-2)" }}>
+                    {b.providerName} · {b.preferredDate}
+                    {b.preferredTime && ` · ${b.preferredTime}`}
+                  </div>
+                  {b.status === "pending" && (
+                    <form action={cancelBookingAction} className="mt-2">
+                      <input type="hidden" name="bookingId" value={b.id} />
+                      <button
+                        type="submit"
+                        className="cc-btn cc-btn-secondary"
+                        style={{ width: "auto", minHeight: 32, fontSize: 12, padding: "0 12px" }}
+                      >
+                        Cancel request
+                      </button>
+                    </form>
+                  )}
+                  {b.status === "accepted" && (
+                    <div className="mt-1.5 text-xs" style={{ color: "var(--c-text-3)" }}>
+                      Agree on payment directly with {b.providerName} (cash, GCash, Maya).
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="mb-4 flex flex-wrap gap-1.5">
         <Link
@@ -66,7 +135,7 @@ export default async function SeekerHomePage({
         )}
 
         {services.map((service) => (
-          <div key={service.id} className="cc-card">
+          <Link key={service.id} href={`/seeker/services/${service.id}`} className="cc-card block">
             <div className="mb-1 flex items-start justify-between gap-2">
               <div className="text-sm font-semibold">{service.title}</div>
               {service.custom && (
@@ -94,7 +163,7 @@ export default async function SeekerHomePage({
             <div className="text-xs" style={{ color: "var(--c-text-3)" }}>
               📍 {service.barangay}, {service.city} · {LEAD_TIME_LABELS[service.leadTime]}
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 
@@ -103,8 +172,7 @@ export default async function SeekerHomePage({
         <div className="text-xs leading-relaxed" style={{ color: "var(--c-text-2)" }}>
           Community Connect connects you with providers — payments are arranged
           directly with them (cash, GCash, Maya). Agree on the price and payment
-          method before the work starts. Booking requests and chat arrive in the
-          next build.
+          method before the work starts.
         </div>
       </div>
     </div>

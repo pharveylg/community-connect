@@ -1,5 +1,12 @@
 import * as z from "zod";
-import { CATEGORY_SLUGS, LEAD_TIMES, RATE_TYPES } from "@/lib/catalog";
+import {
+  CATEGORY_SLUGS,
+  LEAD_TIMES,
+  RATE_TYPES,
+  TOPUP_METHODS,
+  MIN_TOPUP_PESOS,
+  MAX_TOPUP_PESOS,
+} from "@/lib/catalog";
 
 // --- Philippine mobile numbers ------------------------------------------------
 
@@ -70,3 +77,25 @@ export const ServiceListingSchema = z.object({
 export type RegisterBasicInfo = z.infer<typeof RegisterBasicInfoSchema>;
 export type DependentInput = z.infer<typeof DependentSchema>;
 export type ServiceListingInput = z.infer<typeof ServiceListingSchema>;
+
+// --- Bookings -------------------------------------------------------------------
+
+export const BookingRequestSchema = z.object({
+  preferredDate: z.string().trim().min(1, "Please choose your preferred date."),
+  preferredTime: z.string().trim().max(30).optional().default(""),
+  message: z.string().trim().max(300, "Keep your message under 300 characters.").optional().default(""),
+});
+export type BookingRequestInput = z.infer<typeof BookingRequestSchema>;
+
+// --- Credit top-ups ----------------------------------------------------------------
+
+export const TopUpRequestSchema = z.object({
+  amount: z.coerce
+    .number({ error: "Please enter an amount in pesos." })
+    .int("Whole pesos only.")
+    .min(MIN_TOPUP_PESOS, `Minimum top-up is ₱${MIN_TOPUP_PESOS}.`)
+    .max(MAX_TOPUP_PESOS, `Maximum top-up is ₱${MAX_TOPUP_PESOS.toLocaleString("en-PH")}.`),
+  method: z.enum(TOPUP_METHODS, "Please choose how you sent the payment."),
+  refNumber: z.string().trim().min(4, "Please enter your payment reference number.").max(60),
+});
+export type TopUpRequestInput = z.infer<typeof TopUpRequestSchema>;

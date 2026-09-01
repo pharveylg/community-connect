@@ -100,13 +100,27 @@ firestore.rules         Deny-all client rules (all access via Admin SDK)
 
 Built: auth + onboarding (incl. resume-after-interruption), role guardrails
 (no self-serve admin), provider service listings **with custom services**,
-seeker browse with category filters, freemium free-tier limits.
+seeker browse with category filters, **booking request → accept/decline with
+the accept-fee ledger**, **provider credits with manual top-up requests and
+admin approval**, admin operations console (approvals, users, platform
+ledger), freemium free-tier limits (2 active services, 5 free accepts/month,
+₱20/accept beyond that).
 
-Next: booking request → accept flow with the accept-fee ledger, provider
-credits/wallet + manual top-up approval, verification badges, SMS
-notifications, ratings with job-done confirmation, admin console with audit
-log.
+Next: verification badges, ratings with job-done confirmation, SMS
+notifications, suki/rebooking, reverse job board, admin audit-log viewer for
+role changes.
 
 Deliberately deferred: in-app seeker payments (off-platform by design),
 rentals/professional-services categories, VAT/BIR accounting module (pending
 the principal-vs-agent question).
+
+### Money model quick reference
+
+- Seekers never pay the platform; payments are directly between seeker and
+  provider (cash, GCash, Maya) with an upfront disclaimer.
+- Providers: first **5 accepted bookings each month are free**; beyond that a
+  flat **₱20 per accept** is deducted from prepaid credits.
+- Credits are closed-loop and **non-refundable** — they can only pay platform
+  fees. Top-ups are manual (GCash/Maya/bank → admin confirms the reference
+  number → credits post). All credit movements live in an append-only
+  `wallet_events` ledger; balances only change inside Firestore transactions.

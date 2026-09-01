@@ -1,0 +1,99 @@
+"use client";
+
+import { useState, type FormEvent } from "react";
+import { createBookingAction } from "@/app/actions/bookings";
+
+export function RequestBookingForm({
+  serviceId,
+  rate,
+}: {
+  serviceId: string;
+  rate: string;
+}) {
+  const [preferredDate, setPreferredDate] = useState("");
+  const [preferredTime, setPreferredTime] = useState("");
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setPending(true);
+    try {
+      const result = await createBookingAction(serviceId, {
+        preferredDate,
+        preferredTime,
+        message,
+      });
+      if (result?.error) {
+        setError(result.error);
+        setPending(false);
+      }
+      // Success redirects server-side.
+    } catch {
+      setError("Something went wrong. Please try again.");
+      setPending(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="cc-card flex flex-col gap-4">
+      <div className="text-sm font-semibold">
+        Request a booking <span className="font-normal text-xs" style={{ color: "var(--c-text-3)" }}>({rate})</span>
+      </div>
+
+      {error && <p className="cc-error">{error}</p>}
+
+      <div className="flex gap-3">
+        <div className="flex-1">
+          <label className="cc-label" htmlFor="bkDate">
+            Preferred date
+          </label>
+          <input
+            id="bkDate"
+            type="date"
+            className="cc-input"
+            value={preferredDate}
+            onChange={(e) => setPreferredDate(e.target.value)}
+            required
+          />
+        </div>
+        <div className="flex-1">
+          <label className="cc-label" htmlFor="bkTime">
+            Time (optional)
+          </label>
+          <input
+            id="bkTime"
+            type="time"
+            className="cc-input"
+            value={preferredTime}
+            onChange={(e) => setPreferredTime(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="cc-label" htmlFor="bkMsg">
+          Message to the provider (optional)
+        </label>
+        <textarea
+          id="bkMsg"
+          className="cc-input"
+          style={{ minHeight: 72, paddingTop: 10, paddingBottom: 10 }}
+          placeholder="e.g. Small leak under the kitchen sink, ground floor"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          maxLength={300}
+        />
+      </div>
+
+      <button type="submit" className="cc-btn cc-btn-primary" disabled={pending}>
+        {pending ? "Sending…" : "Send booking request"}
+      </button>
+      <div className="text-center text-xs" style={{ color: "var(--c-text-3)" }}>
+        The provider accepts or declines — no payment happens in the app.
+      </div>
+    </form>
+  );
+}

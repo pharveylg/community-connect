@@ -13,6 +13,12 @@ export type Profile = {
   email: string;
   role: Role | null;
   bookingFor: BookingFor | null;
+  /** Prepaid platform credits in pesos (providers). Non-refundable. */
+  credits: number;
+  /** Month the accept-allowance counter belongs to, "YYYY-MM" (Asia/Manila). */
+  acceptPeriod: string | null;
+  /** Accepted bookings this period (free allowance = FREE_MONTHLY_ACCEPTS). */
+  acceptCount: number;
 };
 
 export type Dependent = {
@@ -49,7 +55,33 @@ export async function getProfile(uid: string): Promise<Profile | null> {
     email: data.email,
     role: data.role ?? null,
     bookingFor: data.bookingFor ?? null,
+    credits: typeof data.credits === "number" ? data.credits : 0,
+    acceptPeriod: data.acceptPeriod ?? null,
+    acceptCount: typeof data.acceptCount === "number" ? data.acceptCount : 0,
   };
+}
+
+/** Admin console: most recent profiles (by signup). */
+export async function listProfiles(limit = 50): Promise<Profile[]> {
+  const snap = await getAdminDb()
+    .collection("profiles")
+    .orderBy("createdAt", "desc")
+    .limit(limit)
+    .get();
+  return snap.docs.map((d) => {
+    const data = d.data();
+    return {
+      uid: d.id,
+      fullName: data.fullName ?? "",
+      mobile: data.mobile ?? "",
+      email: data.email ?? "",
+      role: data.role ?? null,
+      bookingFor: data.bookingFor ?? null,
+      credits: typeof data.credits === "number" ? data.credits : 0,
+      acceptPeriod: data.acceptPeriod ?? null,
+      acceptCount: typeof data.acceptCount === "number" ? data.acceptCount : 0,
+    };
+  });
 }
 
 export async function updateProfile(

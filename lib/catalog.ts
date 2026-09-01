@@ -128,3 +128,27 @@ export const LEAD_TIME_LABELS: Record<LeadTime, string> = {
 
 /** Active service listings a free-tier provider may have. Paid tier raises this. */
 export const FREE_MAX_ACTIVE_SERVICES = 2;
+
+/** Accepted bookings a provider gets for free each calendar month. */
+export const FREE_MONTHLY_ACCEPTS = 5;
+
+/** Flat fee (₱, from provider credits) for accepts beyond the free allowance. */
+export const EXTRA_ACCEPT_FEE_PESOS = 20;
+
+// --- Manual credit top-ups (money stays off-platform) ---------------------------
+
+export const TOPUP_METHODS = ["gcash", "maya", "bank"] as const;
+export type TopUpMethod = (typeof TOPUP_METHODS)[number];
+
+export const TOPUP_METHOD_LABELS: Record<TopUpMethod, string> = {
+  gcash: "GCash",
+  maya: "Maya",
+  bank: "Bank transfer",
+};
+
+export const MIN_TOPUP_PESOS = 100;
+export const MAX_TOPUP_PESOS = 10000;
+
+export function formatPeso(amount: number): string {
+  return `₱${amount.toLocaleString("en-PH")}`;
+}
