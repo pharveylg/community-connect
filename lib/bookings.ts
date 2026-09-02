@@ -24,6 +24,9 @@ export type Booking = {
   status: BookingStatus;
   /** Fee actually charged to the provider on accept (0 when free allowance). */
   feeCharged: number;
+  /** Set for job-board bookings: the originating job post. */
+  postId?: string;
+  source?: string;
   createdAt: Date | null;
   decidedAt: Date | null;
   completedAt: Date | null;
@@ -50,6 +53,8 @@ function bookingFromSnap(id: string, data: FirebaseFirestore.DocumentData): Book
     message: data.message ?? "",
     status: data.status,
     feeCharged: typeof data.feeCharged === "number" ? data.feeCharged : 0,
+    postId: data.postId,
+    source: data.source,
     createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : null,
     decidedAt: data.decidedAt instanceof Timestamp ? data.decidedAt.toDate() : null,
     completedAt: data.completedAt instanceof Timestamp ? data.completedAt.toDate() : null,
@@ -199,6 +204,15 @@ export async function acceptBooking(
       feeCharged: charge.fee,
     });
 
+    // Job board: provider confirming completes the double handshake.
+    if (booking.postId) {
+      const postRef = db.collection("job_posts").doc(booking.postId);
+      tx.update(postRef, { status: "filled" });
+      tx.update(db.collection("job_offers").doc(`${booking.postId}__${providerUid}`), {
+        status: "accepted",
+      });
+    }
+
     return { ok: true as const, fee: charge.fee };
   }).catch(() => ({ error: "Could not accept the booking. Please try again." }));
 }
@@ -219,6 +233,10 @@ export async function declineBooking(
     status: "declined",
     decidedAt: FieldValue.serverTimestamp(),
   });
+  if (booking.postId) {
+    const { reopenPostForBooking } = await import("@/lib/jobboard");
+    await reopenPostForBooking(bookingId);
+  }
   return { ok: true as const };
 }
 
@@ -237,6 +255,10 @@ export async function cancelBooking(
     return { error: "Only pending requests can be cancelled here — contact your provider directly." };
   }
   await ref.update({ status: "cancelled" });
+  if (booking.postId) {
+    const { reopenPostForBooking } = await import("@/lib/jobboard");
+    await reopenPostForBooking(bookingId);
+  }
   return { ok: true as const };
 }
 

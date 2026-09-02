@@ -60,6 +60,8 @@ async function cleanOnly() {
   await clearSeeds("wallet_events");
   await clearSeeds("vouch_records");
   await clearSeeds("verifications");
+  await clearSeeds("job_posts");
+  await clearSeeds("job_offers");
   await clearSeeds("verification_id_hashes");
   await clearSeeds("audit_log");
   const seedProfiles = await db.collection("profiles").where("seed", "==", true).get();
@@ -92,6 +94,8 @@ async function main() {
   await clearSeeds("wallet_events");
   await clearSeeds("vouch_records");
   await clearSeeds("verifications");
+  await clearSeeds("job_posts");
+  await clearSeeds("job_offers");
   await clearSeeds("verification_id_hashes");
   await clearSeeds("audit_log");
   const seedProfiles = await db.collection("profiles").where("seed", "==", true).get();
@@ -255,6 +259,55 @@ async function main() {
   });
   await elenaReq.collection("files").add({ mime: "image/svg+xml", data: svg("PhilSys ID — front"), seed: true });
   await elenaReq.collection("files").add({ mime: "image/svg+xml", data: svg("Selfie holding ID"), seed: true });
+
+  // Job board: two open posts from Maria, one pending offer from Jun (verified).
+  const tomorrowISO = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+  const airconPost = await db.collection("job_posts").add({
+    seekerUid: uids.seeker,
+    seekerName: people[4].name,
+    bookingFor: "dependent",
+    title: "Aircon cleaning (2 units)",
+    description: "Two window-type units, ground floor. Preferably this weekend.",
+    categorySlug: "other",
+    custom: true,
+    barangay: "Barangay 28",
+    city: "Cagayan de Oro City",
+    whenNeeded: tomorrowISO,
+    budget: 600,
+    status: "open",
+    acceptedOfferId: null,
+    filledBookingId: null,
+    seed: true,
+    createdAt: FieldValue.serverTimestamp(),
+  });
+  await db.collection("job_posts").add({
+    seekerUid: uids.seeker,
+    seekerName: people[4].name,
+    bookingFor: null,
+    title: "Fetch & deliver cake from Limketkai mall",
+    description: "Birthday cake pickup Saturday 10am, deliver to Barangay 28. I'll pay the cake via GCash ahead.",
+    categorySlug: "errands",
+    custom: false,
+    barangay: "Barangay 28",
+    city: "Cagayan de Oro City",
+    whenNeeded: "flexible",
+    budget: null,
+    status: "open",
+    acceptedOfferId: null,
+    filledBookingId: null,
+    seed: true,
+    createdAt: FieldValue.serverTimestamp(),
+  });
+  await db.collection("job_offers").doc(`${airconPost.id}__${uids.p3}`).set({
+    postId: airconPost.id,
+    providerUid: uids.p3,
+    providerName: people[3].name,
+    amount: 700,
+    message: "My cousin and I do aircon cleaning — includes wash and check. Saturday morning works.",
+    status: "pending",
+    seed: true,
+    createdAt: FieldValue.serverTimestamp(),
+  });
 
   console.log("Seed complete. Accounts (password for all: " + PASSWORD + "):");
   for (const p of people) console.log(`  ${p.role.padEnd(8)} ${p.email}  (${p.name})`);

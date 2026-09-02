@@ -117,3 +117,33 @@ export const VerificationSchema = z.object({
     .default(""),
 });
 export type VerificationInput = z.infer<typeof VerificationSchema>;
+
+// --- Job board -------------------------------------------------------------------
+
+export const JobPostSchema = z.object({
+  title: z.string().trim().min(4, "Give your request a short title (e.g. Aircon cleaning).").max(80),
+  description: z.string().trim().max(400, "Keep details under 400 characters.").optional().default(""),
+  categorySlug: z.enum(CATEGORY_SLUGS, "Please choose a category."),
+  barangay: z.string().trim().min(2, "Please enter your barangay.").max(60),
+  city: z.string().trim().min(2, "Please enter your city.").max(60),
+  whenNeeded: z.string().trim().max(20).optional().default("flexible"),
+  budget: z.coerce
+    .number({ error: "Budget must be a number." })
+    .int("Whole pesos only.")
+    .min(1, "Budget must be at least ₱1.")
+    .max(1_000_000)
+    .nullable()
+    .optional()
+    .default(null),
+});
+export type JobPostInput = z.infer<typeof JobPostSchema>;
+
+export const JobOfferSchema = z.object({
+  amount: z.coerce
+    .number({ error: "Please enter your price as a number." })
+    .int("Whole pesos only.")
+    .min(1, "Your price must be at least ₱1.")
+    .max(1_000_000),
+  message: z.string().trim().max(300, "Keep your message under 300 characters.").optional().default(""),
+});
+export type JobOfferInput = z.infer<typeof JobOfferSchema>;

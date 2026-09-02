@@ -13,8 +13,8 @@ import { InstallButton } from "./install-button";
 const STEPS = [
   {
     n: "01",
-    title: "Browse what's near you",
-    body: "Tricycle rides, tubero, cleaners, caregivers — filtered by barangay, with rates shown up front.",
+    title: "Browse — or post what you need",
+    body: "Tricycle rides, tubero, cleaners, caregivers — filtered by barangay. Can't find it? Post the job and let verified providers come to you.",
   },
   {
     n: "02",

@@ -6,6 +6,7 @@ import { listProviderBookings } from "@/lib/bookings";
 import { allowanceFor } from "@/lib/wallet";
 import { nextTrustTier, trustBadgeStyle, trustTier, trustSummaryLine } from "@/lib/trust";
 import { effectiveVerification } from "@/lib/verifications";
+import { listOpenJobPosts } from "@/lib/jobboard";
 import { acceptBookingAction, declineBookingAction } from "@/app/actions/bookings";
 import { toggleServiceActiveAction } from "@/app/actions/services";
 import {
@@ -36,9 +37,10 @@ export default async function ProviderHomePage({
         ? params.error
         : null;
 
-  const [services, bookings] = await Promise.all([
+  const [services, bookings, jobPosts] = await Promise.all([
     getProviderServices(profile.uid),
     listProviderBookings(profile.uid),
+    listOpenJobPosts(),
   ]);
   const allowance = allowanceFor(profile);
   const pending = bookings.filter((b) => b.status === "pending");
@@ -102,6 +104,28 @@ export default async function ProviderHomePage({
           <div className="mt-2.5 text-xs leading-relaxed opacity-80">
             After your free accepts: {formatPeso(EXTRA_ACCEPT_FEE_PESOS)} per accept from credits →
           </div>
+        </Link>
+      </BlurFade>
+
+      {/* Job board preview */}
+      <BlurFade delay={0.075}>
+        <Link href="/provider/jobs" className="cc-card-interactive mb-4 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="text-sm font-semibold">
+              🎯 Open jobs near you
+              {jobPosts.length > 0 && (
+                <span className="cc-num ml-1.5 font-normal" style={{ color: "var(--c-accent)" }}>
+                  ({jobPosts.length})
+                </span>
+              )}
+            </div>
+            <p className="mt-0.5 truncate text-xs leading-relaxed" style={{ color: "var(--c-text-2)" }}>
+              {jobPosts.length > 0
+                ? jobPosts[0].title
+                : "No open requests right now — check back soon"}
+            </p>
+          </div>
+          <span className="text-lg">→</span>
         </Link>
       </BlurFade>
 

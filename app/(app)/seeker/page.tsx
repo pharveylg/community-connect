@@ -16,6 +16,7 @@ import {
   completeBookingAction,
   vouchForProviderAction,
 } from "@/app/actions/bookings";
+import { listMyJobPosts, listPostOffers } from "@/lib/jobboard";
 import { BlurFade } from "@/components/mp/blur-fade";
 
 const STATUS_STYLES: Record<Booking["status"], { bg: string; fg: string; label: string }> = {
@@ -50,10 +51,15 @@ export default async function SeekerHomePage({
             ? params.error
             : null;
 
-  const [services, bookings] = await Promise.all([
+  const [services, bookings, jobPosts] = await Promise.all([
     browseServices(category?.slug),
     listSeekerBookings(profile.uid),
+    listMyJobPosts(profile.uid),
   ]);
+  const openPosts = jobPosts.filter((p) => p.status === "open");
+  const openOfferCount = (
+    await Promise.all(openPosts.map((p) => listPostOffers(p.id)))
+  ).reduce((n, offers) => n + offers.filter((o) => o.status === "pending").length, 0);
   const activeBookings = bookings.filter((b) => b.status === "pending" || b.status === "accepted");
   const completedBookings = bookings.filter((b) => b.status === "completed");
   const [trust, vouched] = await Promise.all([
@@ -78,6 +84,20 @@ export default async function SeekerHomePage({
           Good morning 👋 {profile.bookingFor === "dependent" ? "· booking for a family member" : ""}
         </p>
         <h1 className="mb-5 text-[26px] font-semibold tracking-tight">{profile.fullName}</h1>
+      </BlurFade>
+
+      <BlurFade delay={0.03}>
+        <Link href="/seeker/requests" className="cc-card-interactive mb-5 flex items-center justify-between gap-3">
+          <div>
+            <div className="text-sm font-semibold">🎯 Post a request</div>
+            <p className="mt-0.5 text-xs leading-relaxed" style={{ color: "var(--c-text-2)" }}>
+              {openPosts.length > 0
+                ? `${openPosts.length} open · ${openOfferCount} offer${openOfferCount === 1 ? "" : "s"} from verified providers`
+                : "Can't find it in browse? Describe the job — verified providers send offers."}
+            </p>
+          </div>
+          <span className="text-lg">→</span>
+        </Link>
       </BlurFade>
 
       {banner && (
