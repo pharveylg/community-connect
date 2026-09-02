@@ -61,12 +61,14 @@ export function txAddWalletEvent(
 }
 
 export async function listWalletEvents(uid: string, limit = 20): Promise<WalletEvent[]> {
+  // No server-side orderBy: equality filter + orderBy would need a composite
+  // index. Sort in memory instead (fine at launch scale).
   const snap = await walletEventsCol()
     .where("uid", "==", uid)
-    .orderBy("createdAt", "desc")
     .limit(limit)
     .get();
-  return snap.docs.map((d) => {
+  return snap.docs
+    .map((d) => {
     const data = d.data();
     return {
       id: d.id,
@@ -79,7 +81,8 @@ export async function listWalletEvents(uid: string, limit = 20): Promise<WalletE
       actor: data.actor,
       createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : null,
     };
-  });
+    })
+    .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
 }
 
 /** Admin: recent events across all users. */
@@ -196,19 +199,22 @@ export async function createTopUpRequest(
 export async function listMyTopUpRequests(uid: string, limit = 10): Promise<TopUpRequest[]> {
   const snap = await topupsCol()
     .where("uid", "==", uid)
-    .orderBy("createdAt", "desc")
     .limit(limit)
     .get();
-  return snap.docs.map((d) => topUpFromSnap(d.id, d.data()));
+  return snap.docs
+    .map((d) => topUpFromSnap(d.id, d.data()))
+    .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
 }
 
 export async function listPendingTopUps(): Promise<TopUpRequest[]> {
+  // In-memory sort (see note above) to avoid a composite index requirement.
   const snap = await topupsCol()
     .where("status", "==", "pending")
-    .orderBy("createdAt", "desc")
     .limit(50)
     .get();
-  return snap.docs.map((d) => topUpFromSnap(d.id, d.data()));
+  return snap.docs
+    .map((d) => topUpFromSnap(d.id, d.data()))
+    .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
 }
 
 /**
