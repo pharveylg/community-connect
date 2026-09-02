@@ -6,6 +6,7 @@ import { getFirebaseAuth } from "@/lib/firebase/client";
 import { firebaseErrorMessage } from "@/lib/firebase-error";
 import { LoginSchema } from "@/lib/validation";
 import { login } from "@/app/actions/auth";
+import { isNextRedirect } from "@/lib/client-errors";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
@@ -33,6 +34,8 @@ export function LoginForm() {
       const idToken = await credential.user.getIdToken();
       await login(idToken);
     } catch (err) {
+      // A redirect from the action is a SUCCESS — navigation is in progress.
+      if (isNextRedirect(err)) return;
       setError(firebaseErrorMessage(err));
       setPending(false);
     }

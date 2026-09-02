@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { requestTopUpAction } from "@/app/actions/wallet";
+import { isNextRedirect } from "@/lib/client-errors";
 import {
   MIN_TOPUP_PESOS,
   MAX_TOPUP_PESOS,
@@ -39,7 +40,8 @@ export function TopUpForm() {
         setPending(false);
       }
       // Success redirects server-side.
-    } catch {
+    } catch (err) {
+      if (isNextRedirect(err)) return;
       setError("Something went wrong. Please try again.");
       setPending(false);
     }
@@ -85,7 +87,8 @@ export function TopUpForm() {
             min={MIN_TOPUP_PESOS}
             max={MAX_TOPUP_PESOS}
             step={1}
-            className="cc-input cc-num pl-8 text-[15px] font-semibold"
+            className="cc-input cc-num text-[15px] font-semibold"
+            style={{ paddingLeft: 36 }}
             placeholder="300"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}

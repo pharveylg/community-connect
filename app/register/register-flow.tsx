@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { motion } from "motion/react";
+import { isNextRedirect } from "@/lib/client-errors";
 import Link from "next/link";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { getFirebaseAuth } from "@/lib/firebase/client";
@@ -45,7 +46,8 @@ export function RegisterFlow() {
     setPending(true);
     try {
       await fn();
-    } catch {
+    } catch (err) {
+      if (isNextRedirect(err)) return; // success — navigation in progress
       setError("Something went wrong. Please try again.");
       setPending(false);
     }
@@ -131,7 +133,8 @@ export function RegisterFlow() {
     setPending(true);
     try {
       await addDependentAction(parsed.data);
-    } catch {
+    } catch (err) {
+      if (isNextRedirect(err)) return;
       setError("Something went wrong. Please try again.");
       setPending(false);
     }

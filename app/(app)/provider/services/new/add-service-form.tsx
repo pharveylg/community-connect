@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { motion } from "motion/react";
 import { createServiceAction } from "@/app/actions/services";
+import { isNextRedirect } from "@/lib/client-errors";
 import {
   LEAD_TIMES,
   LEAD_TIME_LABELS,
@@ -117,7 +118,8 @@ export function AddServiceForm() {
         return;
       }
       // Success redirects server-side to /provider.
-    } catch {
+    } catch (err) {
+      if (isNextRedirect(err)) return;
       setError("Something went wrong creating your service. Please try again.");
       setPending(false);
     }
@@ -269,7 +271,8 @@ export function AddServiceForm() {
                     inputMode="numeric"
                     min={1}
                     step={1}
-                    className="cc-input cc-num pl-8 text-[15px] font-semibold"
+                    className="cc-input cc-num text-[15px] font-semibold"
+                    style={{ paddingLeft: 36 }}
                     placeholder="350"
                     value={rateAmount}
                     onChange={(e) => setRateAmount(e.target.value)}

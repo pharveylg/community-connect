@@ -4,6 +4,7 @@ import { getCurrentProfile } from "@/lib/dal";
 import { getProviderServices } from "@/lib/firestore";
 import { listProviderBookings } from "@/lib/bookings";
 import { allowanceFor } from "@/lib/wallet";
+import { nextTrustTier, trustBadgeStyle, trustTier, trustSummaryLine } from "@/lib/trust";
 import { acceptBookingAction, declineBookingAction } from "@/app/actions/bookings";
 import { toggleServiceActiveAction } from "@/app/actions/services";
 import {
@@ -101,6 +102,33 @@ export default async function ProviderHomePage({
             After your free accepts: {formatPeso(EXTRA_ACCEPT_FEE_PESOS)} per accept from credits →
           </div>
         </Link>
+      </BlurFade>
+
+      {/* Trust status */}
+      <BlurFade delay={0.09}>
+        {(() => {
+          const tier = trustTier(profile.completedCount, profile.vouches);
+          const next = nextTrustTier(tier.key);
+          const style = trustBadgeStyle(tier.key);
+          return (
+            <div className="cc-card mb-5">
+              <div className="mb-1.5 flex items-center gap-2">
+                <span className="cc-badge" style={{ background: style.background, color: style.color }}>
+                  {tier.emoji} {tier.label}
+                </span>
+                <span className="text-[11px]" style={{ color: "var(--c-text-3)" }}>
+                  {trustSummaryLine(profile.completedCount, profile.vouches)}
+                </span>
+              </div>
+              <p className="text-xs leading-relaxed" style={{ color: "var(--c-text-2)" }}>
+                {tier.description}
+                {next
+                  ? ` Next level (${next.label} ${next.emoji}) at ${next.requires.jobs} completed jobs or ${next.requires.vouches} client vouches.`
+                  : " You're at the top level — suki na!"}
+              </p>
+            </div>
+          );
+        })()}
       </BlurFade>
 
       {/* Booking requests */}

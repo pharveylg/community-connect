@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { createBookingAction } from "@/app/actions/bookings";
+import { isNextRedirect } from "@/lib/client-errors";
 
 export function RequestBookingForm({
   serviceId,
@@ -31,7 +32,8 @@ export function RequestBookingForm({
         setPending(false);
       }
       // Success redirects server-side.
-    } catch {
+    } catch (err) {
+      if (isNextRedirect(err)) return;
       setError("Something went wrong. Please try again.");
       setPending(false);
     }

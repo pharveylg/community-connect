@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCurrentProfile } from "@/lib/dal";
-import { getServiceListing } from "@/lib/firestore";
+import { getProfile, getServiceListing } from "@/lib/firestore";
+import { trustBadgeStyle, trustTier, trustSummaryLine } from "@/lib/trust";
 import { LEAD_TIME_LABELS, RATE_TYPE_LABELS, type RateType } from "@/lib/catalog";
 import { BlurFade } from "@/components/mp/blur-fade";
 import { AnimatedNumber } from "@/components/mp/animated-number";
@@ -16,6 +17,7 @@ export default async function ServiceDetailPage({
   const profile = await getCurrentProfile();
   const service = await getServiceListing(id);
   if (!service || !service.active) notFound();
+  const provider = await getProfile(service.providerUid);
 
   return (
     <div className="mx-auto w-full max-w-sm">
@@ -38,9 +40,26 @@ export default async function ServiceDetailPage({
             </span>
           )}
         </div>
-        <div className="mb-4 text-xs" style={{ color: "var(--c-text-2)" }}>
+        <div className="mb-2 text-xs" style={{ color: "var(--c-text-2)" }}>
           {service.categoryLabel} · by {service.providerName}
         </div>
+        {provider && (
+          <div className="mb-4 flex items-center gap-2">
+            {(() => {
+              const tier = trustTier(provider.completedCount, provider.vouches);
+              return (
+                <>
+                  <span className="cc-badge" style={trustBadgeStyle(tier.key)}>
+                    {tier.emoji} {tier.label}
+                  </span>
+                  <span className="text-[11px]" style={{ color: "var(--c-text-3)" }}>
+                    {trustSummaryLine(provider.completedCount, provider.vouches)}
+                  </span>
+                </>
+              );
+            })()}
+          </div>
+        )}
       </BlurFade>
 
       <BlurFade delay={0.12}>

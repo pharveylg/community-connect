@@ -58,6 +58,7 @@ async function cleanOnly() {
   await clearSeeds("bookings");
   await clearSeeds("topup_requests");
   await clearSeeds("wallet_events");
+  await clearSeeds("vouch_records");
   const seedProfiles = await db.collection("profiles").where("seed", "==", true).get();
   for (const d of seedProfiles.docs) {
     const deps = await d.ref.collection("dependents").where("seed", "==", true).get();
@@ -86,6 +87,7 @@ async function main() {
   await clearSeeds("bookings");
   await clearSeeds("topup_requests");
   await clearSeeds("wallet_events");
+  await clearSeeds("vouch_records");
   const seedProfiles = await db.collection("profiles").where("seed", "==", true).get();
   await Promise.all(seedProfiles.docs.map((d) => d.ref.delete()));
 
@@ -100,6 +102,9 @@ async function main() {
       credits: p.key === "p2" ? 0 : p.key === "p1" ? 60 : 40,
       acceptPeriod: null,
       acceptCount: 0,
+      // Trust ladder demos: Ramon = Rising, Jun = Trusted, Elena = New
+      completedCount: p.key === "p1" ? 6 : p.key === "p3" ? 14 : 0,
+      vouches: p.key === "p1" ? 2 : p.key === "p3" ? 5 : 0,
       seed: true,
       createdAt: FieldValue.serverTimestamp(),
     });

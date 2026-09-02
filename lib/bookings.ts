@@ -1,11 +1,11 @@
 import "server-only";
-import { FieldValue, Timestamp } from "firebase-admin/firestore";
+import { FieldPath, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase/admin";
 import { getServiceListing } from "@/lib/firestore";
 import { currentPeriod, decideAcceptCharge, txAddWalletEvent } from "@/lib/wallet";
 import { FREE_MONTHLY_ACCEPTS, type RateType } from "@/lib/catalog";
 
-export type BookingStatus = "pending" | "accepted" | "declined" | "cancelled";
+export type BookingStatus = "pending" | "accepted" | "declined" | "cancelled" | "completed";
 
 export type Booking = {
   id: string;
@@ -26,6 +26,7 @@ export type Booking = {
   feeCharged: number;
   createdAt: Date | null;
   decidedAt: Date | null;
+  completedAt: Date | null;
 };
 
 function bookingsCol() {
@@ -51,6 +52,7 @@ function bookingFromSnap(id: string, data: FirebaseFirestore.DocumentData): Book
     feeCharged: typeof data.feeCharged === "number" ? data.feeCharged : 0,
     createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : null,
     decidedAt: data.decidedAt instanceof Timestamp ? data.decidedAt.toDate() : null,
+    completedAt: data.completedAt instanceof Timestamp ? data.completedAt.toDate() : null,
   };
 }
 
@@ -155,6 +157,8 @@ export async function acceptBooking(
       credits: typeof data.credits === "number" ? data.credits : 0,
       acceptPeriod: data.acceptPeriod ?? null,
       acceptCount: typeof data.acceptCount === "number" ? data.acceptCount : 0,
+      completedCount: typeof data.completedCount === "number" ? data.completedCount : 0,
+      vouches: typeof data.vouches === "number" ? data.vouches : 0,
     };
 
     const period = currentPeriod();
@@ -231,4 +235,109 @@ export async function cancelBooking(
   }
   await ref.update({ status: "cancelled" });
   return { ok: true as const };
+}
+
+// --- Job completion & vouching (trust ladder) -------------------------------------
+
+function vouchRecordId(seekerUid: string, providerUid: string) {
+  return `${seekerUid}__${providerUid}`;
+}
+
+/**
+ * Seeker marks an accepted booking as done. In one transaction: booking →
+ * completed, provider's lifetime completedCount +1. That counter (plus
+ * vouches) drives the provider's trust tier — vetting by track record,
+ * not paperwork.
+ */
+export async function completeBooking(
+  seekerUid: string,
+  bookingId: string
+): Promise<{ ok: true } | { error: string }> {
+  const db = getAdminDb();
+  const bookingRef = bookingsCol().doc(bookingId);
+
+  return db
+    .runTransaction(async (tx) => {
+      const snap = await tx.get(bookingRef);
+      if (!snap.exists) return { error: "Booking not found." };
+      const booking = bookingFromSnap(bookingId, snap.data()!);
+      if (booking.seekerUid !== seekerUid) return { error: "This booking is not yours." };
+      if (booking.status !== "accepted") {
+        return { error: "Only accepted jobs can be marked done." };
+      }
+      const providerRef = db.collection("profiles").doc(booking.providerUid);
+      const providerSnap = await tx.get(providerRef);
+      const count =
+        providerSnap.exists && typeof providerSnap.data()!.completedCount === "number"
+          ? providerSnap.data()!.completedCount
+          : 0;
+
+      tx.update(bookingRef, {
+        status: "completed",
+        completedAt: FieldValue.serverTimestamp(),
+      });
+      tx.update(providerRef, { completedCount: count + 1 });
+      return { ok: true as const };
+    })
+    .catch(() => ({ error: "Could not mark the job done. Please try again." }));
+}
+
+/**
+ * A seeker who completed a job with the provider vouches for them — once per
+ * seeker/provider pair, forever. Vouches feed the trust tier.
+ */
+export async function vouchForProvider(
+  seekerUid: string,
+  bookingId: string
+): Promise<{ ok: true } | { error: string }> {
+  const db = getAdminDb();
+  const bookingRef = bookingsCol().doc(bookingId);
+
+  return db
+    .runTransaction(async (tx) => {
+      const snap = await bookingRef.get();
+      if (!snap.exists) return { error: "Booking not found." };
+      const booking = bookingFromSnap(bookingId, snap.data()!);
+      if (booking.seekerUid !== seekerUid) return { error: "This booking is not yours." };
+      if (booking.status !== "completed") {
+        return { error: "Mark the job as done first, then vouch." };
+      }
+
+      const vouchRef = db.collection("vouch_records").doc(vouchRecordId(seekerUid, booking.providerUid));
+      const existing = await tx.get(vouchRef);
+      if (existing.exists) return { error: "You already vouched for this provider." };
+
+      const providerRef = db.collection("profiles").doc(booking.providerUid);
+      const providerSnap = await tx.get(providerRef);
+      const vouches =
+        providerSnap.exists && typeof providerSnap.data()!.vouches === "number"
+          ? providerSnap.data()!.vouches
+          : 0;
+
+      tx.create(vouchRef, {
+        seekerUid,
+        providerUid: booking.providerUid,
+        bookingId,
+        createdAt: FieldValue.serverTimestamp(),
+      });
+      tx.update(providerRef, { vouches: vouches + 1 });
+      return { ok: true as const };
+    })
+    .catch(() => ({ error: "Could not record your vouch. Please try again." }));
+}
+
+/** Which of the given providers has THIS seeker already vouched for? */
+export async function getVouchedProviderUids(
+  seekerUid: string,
+  providerUids: string[]
+): Promise<Set<string>> {
+  const ids = [...new Set(providerUids)]
+    .slice(0, 30)
+    .map((uid) => vouchRecordId(seekerUid, uid));
+  if (ids.length === 0) return new Set();
+  const snap = await getAdminDb()
+    .collection("vouch_records")
+    .where(FieldPath.documentId(), "in", ids)
+    .get();
+  return new Set(snap.docs.map((d) => d.id.split("__")[1]));
 }

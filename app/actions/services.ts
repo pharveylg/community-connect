@@ -70,9 +70,17 @@ export async function toggleServiceActiveAction(formData: FormData) {
   if (!service || service.providerUid !== profile.uid) return;
 
   if (!service.active) {
+    // Resuming counts against the active-listing cap. Never fail silently —
+    // explain and let the provider choose what to pause instead.
     const existing = await getProviderServices(profile.uid);
     const activeCount = existing.filter((s) => s.active).length;
-    if (activeCount >= FREE_MAX_ACTIVE_SERVICES) return;
+    if (activeCount >= FREE_MAX_ACTIVE_SERVICES) {
+      redirect(
+        `/provider?error=${encodeURIComponent(
+          `Free plan allows ${FREE_MAX_ACTIVE_SERVICES} active services — pause another one first, or finish an active service before resuming this.`
+        )}`
+      );
+    }
   }
 
   await setServiceListingActive(serviceId, !service.active);

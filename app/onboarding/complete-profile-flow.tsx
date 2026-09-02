@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { motion } from "motion/react";
+import { isNextRedirect } from "@/lib/client-errors";
 import {
   addDependentAction,
   completeProfile,
@@ -38,7 +39,8 @@ export function CompleteProfileFlow({
     setPending(true);
     try {
       await fn();
-    } catch {
+    } catch (err) {
+      if (isNextRedirect(err)) return; // success — navigation in progress
       setError("Something went wrong. Please try again.");
       setPending(false);
     }

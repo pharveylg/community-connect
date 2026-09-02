@@ -154,6 +154,7 @@ export default async function AdminHomePage({
               <th className="py-1.5 pr-2 font-medium">Name</th>
               <th className="py-1.5 pr-2 font-medium">Role</th>
               <th className="py-1.5 pr-2 font-medium">Credits</th>
+              <th className="py-1.5 pr-2 font-medium">Jobs</th>
               <th className="py-1.5 font-medium">Mobile</th>
             </tr>
           </thead>
@@ -183,6 +184,7 @@ export default async function AdminHomePage({
                   )}
                 </td>
                 <td className="py-2 pr-2 cc-num">{u.role === "provider" ? formatPeso(u.credits) : "—"}</td>
+                <td className="py-2 pr-2 cc-num">{u.role === "provider" ? (u.completedCount ?? 0) : "—"}</td>
                 <td className="py-2 cc-num" style={{ color: "var(--c-text-2)" }}>
                   {u.mobile}
                 </td>

@@ -6,8 +6,10 @@ import { getCurrentProfile } from "@/lib/dal";
 import {
   acceptBooking,
   cancelBooking,
+  completeBooking,
   createBooking,
   declineBooking,
+  vouchForProvider,
 } from "@/lib/bookings";
 import { BookingRequestSchema } from "@/lib/validation";
 import type { BookingRequestInput } from "@/lib/validation";
@@ -71,4 +73,26 @@ export async function cancelBookingAction(formData: FormData) {
   revalidatePath("/provider");
   if ("error" in result && result.error) redirect(`/seeker?error=${encodeURIComponent(result.error)}`);
   redirect("/seeker?cancelled=1");
+}
+
+export async function completeBookingAction(formData: FormData) {
+  const bookingId = String(formData.get("bookingId") ?? "");
+  const profile = await getCurrentProfile();
+
+  const result = await completeBooking(profile.uid, bookingId);
+  revalidatePath("/seeker");
+  revalidatePath("/provider");
+  if ("error" in result && result.error) redirect(`/seeker?error=${encodeURIComponent(result.error)}`);
+  redirect("/seeker?done=1");
+}
+
+export async function vouchForProviderAction(formData: FormData) {
+  const bookingId = String(formData.get("bookingId") ?? "");
+  const profile = await getCurrentProfile();
+
+  const result = await vouchForProvider(profile.uid, bookingId);
+  revalidatePath("/seeker");
+  revalidatePath("/provider");
+  if ("error" in result && result.error) redirect(`/seeker?error=${encodeURIComponent(result.error)}`);
+  redirect("/seeker?vouched=1");
 }

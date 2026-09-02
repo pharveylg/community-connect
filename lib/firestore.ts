@@ -19,6 +19,10 @@ export type Profile = {
   acceptPeriod: string | null;
   /** Accepted bookings this period (free allowance = FREE_MONTHLY_ACCEPTS). */
   acceptCount: number;
+  /** Completed jobs ever — drives the trust tier. */
+  completedCount: number;
+  /** Unique clients who vouched for this provider. */
+  vouches: number;
 };
 
 export type Dependent = {
@@ -58,7 +62,29 @@ export async function getProfile(uid: string): Promise<Profile | null> {
     credits: typeof data.credits === "number" ? data.credits : 0,
     acceptPeriod: data.acceptPeriod ?? null,
     acceptCount: typeof data.acceptCount === "number" ? data.acceptCount : 0,
+    completedCount: typeof data.completedCount === "number" ? data.completedCount : 0,
+    vouches: typeof data.vouches === "number" ? data.vouches : 0,
   };
+}
+
+/** Batch trust lookup for browse pages: uid -> {completedCount, vouches}. */
+export async function getProviderTrust(
+  uids: string[]
+): Promise<Map<string, { completedCount: number; vouches: number }>> {
+  const uniq = [...new Set(uids)].slice(0, 30);
+  const map = new Map<string, { completedCount: number; vouches: number }>();
+  if (uniq.length === 0) return map;
+  const db = getAdminDb();
+  const snaps = await db.getAll(...uniq.map((id) => db.collection("profiles").doc(id)));
+  for (const snap of snaps) {
+    if (!snap.exists) continue;
+    const d = snap.data()!;
+    map.set(snap.id, {
+      completedCount: typeof d.completedCount === "number" ? d.completedCount : 0,
+      vouches: typeof d.vouches === "number" ? d.vouches : 0,
+    });
+  }
+  return map;
 }
 
 /** Admin console: most recent profiles (by signup). */
@@ -80,6 +106,8 @@ export async function listProfiles(limit = 50): Promise<Profile[]> {
       credits: typeof data.credits === "number" ? data.credits : 0,
       acceptPeriod: data.acceptPeriod ?? null,
       acceptCount: typeof data.acceptCount === "number" ? data.acceptCount : 0,
+      completedCount: typeof data.completedCount === "number" ? data.completedCount : 0,
+      vouches: typeof data.vouches === "number" ? data.vouches : 0,
     };
   });
 }
