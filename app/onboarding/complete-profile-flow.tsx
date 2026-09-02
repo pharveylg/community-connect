@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { motion } from "motion/react";
 import {
   addDependentAction,
   completeProfile,
@@ -106,6 +107,13 @@ export function CompleteProfileFlow({
   return (
     <div>
       {error && <p className="cc-error mb-4">{error}</p>}
+
+      <motion.div
+        key={step}
+        initial={{ opacity: 0, y: 10, filter: "blur(6px)" }}
+        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+        transition={{ duration: 0.35, ease: [0.21, 0.47, 0.32, 0.98] }}
+      >
 
       {step === "basic" && (
         <form onSubmit={handleBasicSubmit} className="flex flex-col gap-4">
@@ -278,6 +286,7 @@ export function CompleteProfileFlow({
           </div>
         </form>
       )}
+      </motion.div>
     </div>
   );
 }

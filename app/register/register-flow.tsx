@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { motion } from "motion/react";
 import Link from "next/link";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { getFirebaseAuth } from "@/lib/firebase/client";
@@ -144,12 +145,25 @@ export function RegisterFlow() {
         style={{ background: "var(--c-border)" }}
       >
         <div
-          className="h-full rounded-full transition-all"
-          style={{ background: "var(--c-accent)", width: `${STEP_PROGRESS[step]}%` }}
+          className="h-full rounded-full"
+          style={{
+            background: "linear-gradient(90deg, var(--c-accent), var(--c-accent-2))",
+            width: `${STEP_PROGRESS[step]}%`,
+            transitionProperty: "width",
+            transitionDuration: "400ms",
+            transitionTimingFunction: "cubic-bezier(0.2, 0, 0, 1)",
+          }}
         />
       </div>
 
       {error && <p className="cc-error mb-4">{error}</p>}
+
+      <motion.div
+        key={step}
+        initial={{ opacity: 0, y: 10, filter: "blur(6px)" }}
+        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+        transition={{ duration: 0.35, ease: [0.21, 0.47, 0.32, 0.98] }}
+      >
 
       {step === "basic" && (
         <>
@@ -384,6 +398,7 @@ export function RegisterFlow() {
           </div>
         </>
       )}
+      </motion.div>
     </div>
   );
 }

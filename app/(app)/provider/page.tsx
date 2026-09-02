@@ -14,6 +14,8 @@ import {
   formatPeso,
   formatRate,
 } from "@/lib/catalog";
+import { BlurFade } from "@/components/mp/blur-fade";
+import { AnimatedNumber } from "@/components/mp/animated-number";
 
 export default async function ProviderHomePage({
   searchParams,
@@ -41,195 +43,250 @@ export default async function ProviderHomePage({
   const accepted = bookings.filter((b) => b.status === "accepted");
   const activeCount = services.filter((s) => s.active).length;
   const atCap = activeCount >= FREE_MAX_ACTIVE_SERVICES;
+  const usedPct = Math.round((allowance.used / FREE_MONTHLY_ACCEPTS) * 100);
 
   return (
     <div className="mx-auto w-full max-w-sm">
-      <p className="mb-1 text-xs" style={{ color: "var(--c-text-2)" }}>
-        Provider dashboard
-      </p>
-      <h1 className="mb-4 text-lg font-semibold">{profile.fullName}</h1>
+      <BlurFade delay={0}>
+        <p className="mb-1 text-xs font-medium" style={{ color: "var(--c-text-2)" }}>
+          Provider dashboard
+        </p>
+        <h1 className="mb-5 text-[26px] font-semibold tracking-tight">{profile.fullName}</h1>
+      </BlurFade>
 
       {banner && (
-        <div className="cc-card mb-4 text-xs leading-relaxed" style={{ borderColor: "var(--c-accent)" }}>
-          {banner}
-        </div>
+        <BlurFade delay={0.04}>
+          <div
+            className="cc-card mb-4 text-xs leading-relaxed"
+            style={{ boxShadow: "0 0 0 1px var(--c-accent), var(--shadow-border)" }}
+          >
+            {banner}
+          </div>
+        </BlurFade>
       )}
 
       {/* Wallet / allowance */}
-      <Link href="/provider/credits" className="cc-card mb-5 block">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-xs" style={{ color: "var(--c-text-2)" }}>
-              Credit balance
+      <BlurFade delay={0.07}>
+        <Link
+          href="/provider/credits"
+          className="mb-6 block rounded-[24px] p-5 text-white"
+          style={{
+            background: "linear-gradient(135deg,#0b4480 0%,#0e7a5f 130%)",
+            boxShadow: "var(--shadow-btn)",
+          }}
+        >
+          <div className="flex items-end justify-between">
+            <div>
+              <div className="mb-0.5 text-[11px] font-medium uppercase tracking-[0.12em] opacity-75">
+                Credit balance
+              </div>
+              <div className="text-[32px] font-semibold leading-none tracking-tight">
+                <AnimatedNumber value={profile.credits} prefix="₱" />
+              </div>
             </div>
-            <div className="text-xl font-semibold">{formatPeso(profile.credits)}</div>
+            <div className="text-right">
+              <div className="mb-0.5 text-[11px] font-medium uppercase tracking-[0.12em] opacity-75">
+                Free accepts
+              </div>
+              <div className="text-[32px] font-semibold leading-none tracking-tight cc-num">
+                {allowance.freeRemaining}
+                <span className="text-base font-normal opacity-70"> / {FREE_MONTHLY_ACCEPTS}</span>
+              </div>
+            </div>
           </div>
-          <div className="text-right">
-            <div className="text-xs" style={{ color: "var(--c-text-2)" }}>
-              Free accepts left this month
-            </div>
-            <div className="text-xl font-semibold">
-              {allowance.freeRemaining}
-              <span className="text-sm font-normal" style={{ color: "var(--c-text-3)" }}>
-                {" "}/ {FREE_MONTHLY_ACCEPTS}
-              </span>
-            </div>
+          <div className="mt-4 cc-progress" style={{ color: "#ffffff" }}>
+            <div style={{ width: `${100 - usedPct}%`, opacity: 0.9 }} />
           </div>
-        </div>
-        <div className="mt-2 text-xs" style={{ color: "var(--c-text-3)" }}>
-          After your free accepts: {formatPeso(EXTRA_ACCEPT_FEE_PESOS)} per accept from credits →
-        </div>
-      </Link>
+          <div className="mt-2.5 text-xs leading-relaxed opacity-80">
+            After your free accepts: {formatPeso(EXTRA_ACCEPT_FEE_PESOS)} per accept from credits →
+          </div>
+        </Link>
+      </BlurFade>
 
       {/* Booking requests */}
-      <h2 className="mb-2 text-sm font-semibold">
-        Booking requests {pending.length > 0 && `(${pending.length})`}
-      </h2>
-      <div className="mb-5 flex flex-col gap-3">
+      <BlurFade delay={0.1}>
+        <h2 className="mb-2.5 text-sm font-semibold">
+          Booking requests{" "}
+          {pending.length > 0 && (
+            <span
+              className="cc-badge ml-1"
+              style={{ background: "#fdf3dc", color: "#8a5a00" }}
+            >
+              {pending.length} new
+            </span>
+          )}
+        </h2>
+      </BlurFade>
+      <div className="mb-6 flex flex-col gap-3">
         {pending.length === 0 && (
-          <div className="cc-card text-center text-xs" style={{ color: "var(--c-text-2)" }}>
-            No pending requests right now.
-          </div>
+          <BlurFade delay={0.12}>
+            <div className="cc-card text-center text-xs" style={{ color: "var(--c-text-2)" }}>
+              No pending requests right now.
+            </div>
+          </BlurFade>
         )}
-        {pending.map((b) => (
-          <div key={b.id} className="cc-card">
-            <div className="mb-1 text-sm font-semibold">{b.serviceTitle}</div>
-            <div className="mb-2 text-xs" style={{ color: "var(--c-text-2)" }}>
-              From {b.seekerName} · {b.preferredDate}
-              {b.preferredTime && ` · ${b.preferredTime}`} · {formatRate(b.rateAmount, b.rateType)}
+        {pending.map((b, i) => (
+          <BlurFade key={b.id} delay={0.12 + i * 0.07}>
+            <div className="cc-card">
+              <div className="mb-1 text-[15px] font-semibold">{b.serviceTitle}</div>
+              <div className="mb-2 text-xs" style={{ color: "var(--c-text-2)" }}>
+                From {b.seekerName} · <span className="cc-num">{b.preferredDate}</span>
+                {b.preferredTime && ` · ${b.preferredTime}`} · {formatRate(b.rateAmount, b.rateType)}
+              </div>
+              {b.message && (
+                <p className="mb-3 text-[13px] leading-relaxed">“{b.message}”</p>
+              )}
+              <div className="flex gap-2">
+                <form action={acceptBookingAction}>
+                  <input type="hidden" name="bookingId" value={b.id} />
+                  <button
+                    type="submit"
+                    className="cc-btn cc-btn-primary"
+                    style={{ width: "auto", minHeight: 40, fontSize: 13, padding: "0 16px" }}
+                  >
+                    {allowance.freeRemaining > 0
+                      ? "Accept (free)"
+                      : `Accept (${formatPeso(EXTRA_ACCEPT_FEE_PESOS)})`}
+                  </button>
+                </form>
+                <form action={declineBookingAction}>
+                  <input type="hidden" name="bookingId" value={b.id} />
+                  <button
+                    type="submit"
+                    className="cc-btn cc-btn-secondary"
+                    style={{ width: "auto", minHeight: 40, fontSize: 13, padding: "0 16px" }}
+                  >
+                    Decline
+                  </button>
+                </form>
+              </div>
             </div>
-            {b.message && (
-              <p className="mb-3 text-xs leading-relaxed" style={{ color: "var(--c-text)" }}>
-                “{b.message}”
-              </p>
-            )}
-            <div className="flex gap-2">
-              <form action={acceptBookingAction}>
-                <input type="hidden" name="bookingId" value={b.id} />
-                <button
-                  type="submit"
-                  className="cc-btn cc-btn-primary"
-                  style={{ width: "auto", minHeight: 38, fontSize: 13, padding: "0 16px" }}
-                >
-                  {allowance.freeRemaining > 0 ? "Accept (free)" : `Accept (${formatPeso(EXTRA_ACCEPT_FEE_PESOS)})`}
-                </button>
-              </form>
-              <form action={declineBookingAction}>
-                <input type="hidden" name="bookingId" value={b.id} />
-                <button
-                  type="submit"
-                  className="cc-btn cc-btn-secondary"
-                  style={{ width: "auto", minHeight: 38, fontSize: 13, padding: "0 16px" }}
-                >
-                  Decline
-                </button>
-              </form>
-            </div>
-          </div>
+          </BlurFade>
         ))}
       </div>
 
       {/* Accepted jobs */}
       {accepted.length > 0 && (
-        <div className="mb-5">
-          <h2 className="mb-2 text-sm font-semibold">Accepted jobs ({accepted.length})</h2>
-          <div className="flex flex-col gap-2">
-            {accepted.map((b) => (
-              <div key={b.id} className="cc-card">
-                <div className="text-sm font-semibold">{b.serviceTitle}</div>
-                <div className="text-xs" style={{ color: "var(--c-text-2)" }}>
-                  {b.seekerName} · {b.preferredDate}
-                  {b.preferredTime && ` · ${b.preferredTime}`}
+        <div className="mb-6">
+          <BlurFade delay={0.1}>
+            <h2 className="mb-2.5 text-sm font-semibold">Accepted jobs ({accepted.length})</h2>
+          </BlurFade>
+          <div className="flex flex-col gap-2.5">
+            {accepted.map((b, i) => (
+              <BlurFade key={b.id} delay={0.12 + i * 0.06}>
+                <div className="cc-card">
+                  <div className="text-sm font-semibold">{b.serviceTitle}</div>
+                  <div className="text-xs" style={{ color: "var(--c-text-2)" }}>
+                    {b.seekerName} · <span className="cc-num">{b.preferredDate}</span>
+                    {b.preferredTime && ` · ${b.preferredTime}`}
+                  </div>
+                  <div className="mt-1.5 text-xs" style={{ color: "var(--c-text-3)" }}>
+                    Agree on payment directly (cash, GCash, Maya).
+                    {b.feeCharged > 0 && ` · ${formatPeso(b.feeCharged)} accept fee charged.`}
+                  </div>
                 </div>
-                <div className="mt-1 text-xs" style={{ color: "var(--c-text-3)" }}>
-                  Agree on payment directly (cash, GCash, Maya).
-                  {b.feeCharged > 0 && ` · ${formatPeso(b.feeCharged)} accept fee charged.`}
-                </div>
-              </div>
+              </BlurFade>
             ))}
           </div>
         </div>
       )}
 
       {/* Services */}
-      <h2 className="mb-2 text-sm font-semibold">Services ({activeCount} active)</h2>
+      <BlurFade delay={0.1}>
+        <h2 className="mb-2.5 text-sm font-semibold">
+          Services{" "}
+          <span className="cc-num font-normal" style={{ color: "var(--c-text-3)" }}>
+            ({activeCount} active)
+          </span>
+        </h2>
+      </BlurFade>
       <div className="mb-4 flex flex-col gap-3">
         {services.length === 0 && (
-          <div className="cc-card text-center">
-            <div className="mb-3 text-xs" style={{ color: "var(--c-text-2)" }}>
-              No services yet — create your first listing.
-            </div>
-            <Link href="/provider/services/new" className="cc-btn cc-btn-primary">
-              ＋ Create a service
-            </Link>
-          </div>
-        )}
-        {services.map((service) => (
-          <div key={service.id} className="cc-card">
-            <div className="mb-1 flex items-start justify-between gap-2">
-              <div>
-                <div className="text-sm font-semibold">{service.title}</div>
-                <div className="text-xs" style={{ color: "var(--c-text-2)" }}>
-                  {service.categoryLabel}
-                  {service.custom && (
-                    <span
-                      className="cc-badge"
-                      style={{ marginLeft: 6, background: "var(--c-accent-light)", color: "var(--c-accent)" }}
-                    >
-                      custom
-                    </span>
-                  )}
-                </div>
+          <BlurFade delay={0.12}>
+            <div className="cc-card text-center">
+              <div className="mb-3 text-xs" style={{ color: "var(--c-text-2)" }}>
+                No services yet — create your first listing.
               </div>
-              <span
-                className="cc-badge"
-                style={
-                  service.active
-                    ? { background: "#e7f4e9", color: "#1e6b2e" }
-                    : { background: "var(--c-surface-2)", color: "var(--c-text-2)" }
-                }
-              >
-                {service.active ? "Active" : "Paused"}
-              </span>
+              <Link href="/provider/services/new" className="cc-btn cc-btn-primary">
+                ＋ Create a service
+              </Link>
             </div>
-            <div className="mb-2 text-sm font-medium">{formatRate(service.rateAmount, service.rateType)}</div>
-            <div className="mb-3 text-xs" style={{ color: "var(--c-text-2)" }}>
-              {service.barangay}, {service.city} · {LEAD_TIME_LABELS[service.leadTime]}
-              {service.negotiable && " · Rate negotiable"}
+          </BlurFade>
+        )}
+        {services.map((service, i) => (
+          <BlurFade key={service.id} delay={0.12 + i * 0.06}>
+            <div className="cc-card">
+              <div className="mb-1.5 flex items-start justify-between gap-2">
+                <div>
+                  <div className="text-[15px] font-semibold">{service.title}</div>
+                  <div className="mt-0.5 text-xs" style={{ color: "var(--c-text-2)" }}>
+                    {service.categoryLabel}
+                    {service.custom && (
+                      <span
+                        className="cc-badge ml-1.5"
+                        style={{ background: "var(--c-accent-light)", color: "var(--c-accent)" }}
+                      >
+                        ✨ custom
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <span
+                  className="cc-badge"
+                  style={
+                    service.active
+                      ? { background: "var(--c-success-light)", color: "var(--c-success)" }
+                      : { background: "var(--c-surface-2)", color: "var(--c-text-2)" }
+                  }
+                >
+                  {service.active ? "Active" : "Paused"}
+                </span>
+              </div>
+              <div className="mb-2 text-[15px] font-semibold cc-num">
+                {formatRate(service.rateAmount, service.rateType)}
+              </div>
+              <div className="mb-3 text-xs" style={{ color: "var(--c-text-2)" }}>
+                📍 {service.barangay}, {service.city} · {LEAD_TIME_LABELS[service.leadTime]}
+                {service.negotiable && " · Rate negotiable"}
+              </div>
+              <form action={toggleServiceActiveAction}>
+                <input type="hidden" name="serviceId" value={service.id} />
+                <button
+                  type="submit"
+                  className="cc-btn cc-btn-secondary"
+                  style={{ width: "auto", minHeight: 36, fontSize: 12, padding: "0 12px" }}
+                >
+                  {service.active ? "Pause" : "Resume"}
+                </button>
+              </form>
             </div>
-            <form action={toggleServiceActiveAction}>
-              <input type="hidden" name="serviceId" value={service.id} />
-              <button
-                type="submit"
-                className="cc-btn cc-btn-secondary"
-                style={{ width: "auto", minHeight: 36, fontSize: 12, padding: "0 12px" }}
-              >
-                {service.active ? "Pause" : "Resume"}
-              </button>
-            </form>
-          </div>
+          </BlurFade>
         ))}
       </div>
 
       {services.length > 0 && (
-        <Link
-          href="/provider/services/new"
-          className={`cc-btn ${atCap ? "cc-btn-secondary" : "cc-btn-primary"} mb-4`}
-        >
-          {atCap ? `＋ New service (free slots full — pause one above)` : "＋ Create another service"}
-        </Link>
+        <BlurFade delay={0.1}>
+          <Link
+            href="/provider/services/new"
+            className={`cc-btn mb-4 ${atCap ? "cc-btn-secondary" : "cc-btn-primary"}`}
+          >
+            {atCap ? "＋ New service (free slots full — pause one above)" : "＋ Create another service"}
+          </Link>
+        </BlurFade>
       )}
 
-      <div className="cc-card">
-        <div className="mb-1.5 text-sm font-medium">💳 Credits &amp; top-ups</div>
-        <div className="text-xs" style={{ color: "var(--c-text-2)" }}>
-          Send GCash/Maya/bank transfer to the platform account, then submit the
-          reference number — an admin confirms and your credits appear.{" "}
-          <Link href="/provider/credits" style={{ color: "var(--c-accent)" }}>
-            Top up →
-          </Link>
+      <BlurFade delay={0.12} inView>
+        <div className="cc-card">
+          <div className="mb-1.5 text-sm font-semibold">💳 Credits &amp; top-ups</div>
+          <p className="text-xs leading-relaxed" style={{ color: "var(--c-text-2)" }}>
+            Send GCash/Maya/bank transfer to the platform account, then submit the
+            reference number — an admin confirms and your credits appear.{" "}
+            <Link href="/provider/credits" className="font-semibold" style={{ color: "var(--c-accent)" }}>
+              Top up →
+            </Link>
+          </p>
         </div>
-      </div>
+      </BlurFade>
     </div>
   );
 }

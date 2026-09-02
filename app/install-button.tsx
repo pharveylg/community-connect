@@ -47,23 +47,28 @@ export function InstallButton() {
   }
 
   return (
-    <div className="mt-4 rounded-2xl p-3 text-left" style={{ background: "var(--c-surface-2)" }}>
+    <div className="mt-4 rounded-[16px] p-3.5 text-left" style={{ background: "var(--c-surface-2)" }}>
       <div className="mb-2 flex items-center justify-between">
         <span className="text-xs font-semibold">📲 Install Community Connect</span>
         <button
           type="button"
           aria-label="Dismiss"
-          className="text-xs"
+          className="flex h-8 w-8 items-center justify-center rounded-full text-xs"
           style={{ color: "var(--c-text-3)" }}
           onClick={() => setHidden(true)}
         >
           ✕
         </button>
       </div>
-      <button type="button" className="cc-btn cc-btn-primary" style={{ minHeight: 40 }} onClick={install}>
+      <button
+        type="button"
+        className="cc-btn cc-btn-primary"
+        style={{ minHeight: 42, fontSize: 13.5 }}
+        onClick={install}
+      >
         Install app
       </button>
-      <p className="mt-2 text-[11px] leading-snug" style={{ color: "var(--c-text-3)" }}>
+      <p className="mt-2.5 text-[11px] leading-snug" style={{ color: "var(--c-text-3)" }}>
         On iPhone: open this page in Safari, tap Share, then &ldquo;Add to Home
         Screen&rdquo;.
       </p>

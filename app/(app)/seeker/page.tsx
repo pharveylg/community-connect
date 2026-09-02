@@ -10,10 +10,11 @@ import {
   getCategory,
 } from "@/lib/catalog";
 import { cancelBookingAction } from "@/app/actions/bookings";
+import { BlurFade } from "@/components/mp/blur-fade";
 
 const STATUS_STYLES: Record<Booking["status"], { bg: string; fg: string; label: string }> = {
-  pending: { bg: "#fff4e0", fg: "#8a5a00", label: "Waiting for provider" },
-  accepted: { bg: "#e7f4e9", fg: "#1e6b2e", label: "Accepted ✓" },
+  pending: { bg: "#fdf3dc", fg: "#8a5a00", label: "Waiting for provider" },
+  accepted: { bg: "var(--c-success-light)", fg: "var(--c-success)", label: "Accepted ✓" },
   declined: { bg: "var(--c-danger-light)", fg: "var(--c-danger)", label: "Declined" },
   cancelled: { bg: "var(--c-surface-2)", fg: "var(--c-text-2)", label: "Cancelled" },
 };
@@ -45,136 +46,152 @@ export default async function SeekerHomePage({
 
   return (
     <div className="mx-auto w-full max-w-sm">
-      <p className="mb-1 text-xs" style={{ color: "var(--c-text-2)" }}>
-        Good morning 👋 {profile.bookingFor === "dependent" ? "(booking for a family member)" : ""}
-      </p>
-      <h1 className="mb-4 text-lg font-semibold">{profile.fullName}</h1>
+      <BlurFade delay={0}>
+        <p className="mb-1 text-xs font-medium" style={{ color: "var(--c-text-2)" }}>
+          Good morning 👋 {profile.bookingFor === "dependent" ? "· booking for a family member" : ""}
+        </p>
+        <h1 className="mb-5 text-[26px] font-semibold tracking-tight">{profile.fullName}</h1>
+      </BlurFade>
 
       {banner && (
-        <div className="cc-card mb-4 text-xs leading-relaxed" style={{ borderColor: "var(--c-accent)" }}>
-          {banner}
-        </div>
+        <BlurFade delay={0.05}>
+          <div
+            className="cc-card mb-4 text-xs leading-relaxed"
+            style={{ boxShadow: "0 0 0 1px var(--c-accent), var(--shadow-border)" }}
+          >
+            {banner}
+          </div>
+        </BlurFade>
       )}
 
       {activeBookings.length > 0 && (
-        <div className="mb-5">
-          <h2 className="mb-2 text-sm font-semibold">My bookings</h2>
-          <div className="flex flex-col gap-2">
-            {activeBookings.map((b) => {
+        <div className="mb-6">
+          <BlurFade delay={0.08}>
+            <h2 className="mb-2.5 text-sm font-semibold">My bookings</h2>
+          </BlurFade>
+          <div className="flex flex-col gap-2.5">
+            {activeBookings.map((b, i) => {
               const st = STATUS_STYLES[b.status];
               return (
-                <div key={b.id} className="cc-card">
-                  <div className="mb-1 flex items-start justify-between gap-2">
-                    <div className="text-sm font-semibold">{b.serviceTitle}</div>
-                    <span className="cc-badge" style={{ background: st.bg, color: st.fg }}>
-                      {st.label}
-                    </span>
-                  </div>
-                  <div className="text-xs" style={{ color: "var(--c-text-2)" }}>
-                    {b.providerName} · {b.preferredDate}
-                    {b.preferredTime && ` · ${b.preferredTime}`}
-                  </div>
-                  {b.status === "pending" && (
-                    <form action={cancelBookingAction} className="mt-2">
-                      <input type="hidden" name="bookingId" value={b.id} />
-                      <button
-                        type="submit"
-                        className="cc-btn cc-btn-secondary"
-                        style={{ width: "auto", minHeight: 32, fontSize: 12, padding: "0 12px" }}
-                      >
-                        Cancel request
-                      </button>
-                    </form>
-                  )}
-                  {b.status === "accepted" && (
-                    <div className="mt-1.5 text-xs" style={{ color: "var(--c-text-3)" }}>
-                      Agree on payment directly with {b.providerName} (cash, GCash, Maya).
+                <BlurFade key={b.id} delay={0.1 + i * 0.06}>
+                  <div className="cc-card">
+                    <div className="mb-1 flex items-start justify-between gap-2">
+                      <div className="text-sm font-semibold">{b.serviceTitle}</div>
+                      <span className="cc-badge" style={{ background: st.bg, color: st.fg }}>
+                        {st.label}
+                      </span>
                     </div>
-                  )}
-                </div>
+                    <div className="text-xs" style={{ color: "var(--c-text-2)" }}>
+                      {b.providerName} · <span className="cc-num">{b.preferredDate}</span>
+                      {b.preferredTime && ` · ${b.preferredTime}`}
+                    </div>
+                    {b.status === "pending" && (
+                      <form action={cancelBookingAction} className="mt-2.5">
+                        <input type="hidden" name="bookingId" value={b.id} />
+                        <button
+                          type="submit"
+                          className="cc-btn cc-btn-ghost"
+                          style={{ width: "auto", minHeight: 36, fontSize: 12.5, padding: "0 12px" }}
+                        >
+                          Cancel request
+                        </button>
+                      </form>
+                    )}
+                    {b.status === "accepted" && (
+                      <div className="mt-1.5 text-xs" style={{ color: "var(--c-text-3)" }}>
+                        Agree on payment directly with {b.providerName} (cash, GCash, Maya).
+                      </div>
+                    )}
+                  </div>
+                </BlurFade>
               );
             })}
           </div>
         </div>
       )}
 
-      <div className="mb-4 flex flex-wrap gap-1.5">
-        <Link
-          href="/seeker"
-          className="cc-chip"
-          style={!category ? { background: "var(--c-accent)", color: "#fff", borderColor: "var(--c-accent)" } : undefined}
-        >
-          All
-        </Link>
-        {SERVICE_CATEGORIES.map((cat) => (
+      <BlurFade delay={0.12}>
+        <div className="mb-3 flex flex-wrap gap-1.5">
           <Link
-            key={cat.slug}
-            href={`/seeker?category=${cat.slug}`}
-            className="cc-chip"
-            style={
-              category?.slug === cat.slug
-                ? { background: "var(--c-accent)", color: "#fff", borderColor: "var(--c-accent)" }
-                : undefined
-            }
+            href="/seeker"
+            className={`cc-chip ${!category ? "cc-chip-active" : ""}`}
           >
-            {cat.emoji} {cat.label}
+            All
           </Link>
-        ))}
-      </div>
+          {SERVICE_CATEGORIES.map((cat) => (
+            <Link
+              key={cat.slug}
+              href={`/seeker?category=${cat.slug}`}
+              className={`cc-chip ${category?.slug === cat.slug ? "cc-chip-active" : ""}`}
+            >
+              <span className="text-sm leading-none">{cat.emoji}</span> {cat.label}
+            </Link>
+          ))}
+        </div>
+      </BlurFade>
 
       <div className="flex flex-col gap-3">
         {services.length === 0 && (
-          <div className="cc-card text-center">
-            <div className="mb-1.5 text-sm font-medium">
-              {category ? `No ${category.label.toLowerCase()} services yet` : "No services listed yet"}
+          <BlurFade delay={0.15}>
+            <div className="cc-card text-center">
+              <div className="mb-1.5 text-sm font-medium">
+                {category ? `No ${category.label.toLowerCase()} services yet` : "No services listed yet"}
+              </div>
+              <div className="text-xs" style={{ color: "var(--c-text-2)" }}>
+                Providers are signing up — check another category, or come back soon.
+              </div>
             </div>
-            <div className="text-xs" style={{ color: "var(--c-text-2)" }}>
-              Providers are signing up — check another category, or come back soon.
-            </div>
-          </div>
+          </BlurFade>
         )}
 
-        {services.map((service) => (
-          <Link key={service.id} href={`/seeker/services/${service.id}`} className="cc-card block">
-            <div className="mb-1 flex items-start justify-between gap-2">
-              <div className="text-sm font-semibold">{service.title}</div>
-              {service.custom && (
-                <span className="cc-badge" style={{ background: "var(--c-accent-light)", color: "var(--c-accent)" }}>
-                  custom service
-                </span>
+        {services.map((service, i) => (
+          <BlurFade key={service.id} delay={0.04 * i} inView>
+            <Link href={`/seeker/services/${service.id}`} className="cc-card-interactive block">
+              <div className="mb-1 flex items-start justify-between gap-2">
+                <div className="text-[15px] font-semibold">{service.title}</div>
+                {service.custom && (
+                  <span
+                    className="cc-badge"
+                    style={{ background: "var(--c-accent-light)", color: "var(--c-accent)" }}
+                  >
+                    ✨ custom
+                  </span>
+                )}
+              </div>
+              <div className="mb-2.5 text-xs" style={{ color: "var(--c-text-2)" }}>
+                {service.categoryLabel} · by {service.providerName}
+              </div>
+              <div className="mb-2.5 text-[15px] font-semibold cc-num">
+                {formatRate(service.rateAmount, service.rateType)}
+                {service.negotiable && (
+                  <span className="ml-1.5 text-xs font-normal" style={{ color: "var(--c-text-3)" }}>
+                    negotiable
+                  </span>
+                )}
+              </div>
+              {service.description && (
+                <p className="mb-2.5 text-xs leading-relaxed" style={{ color: "var(--c-text-2)" }}>
+                  {service.description}
+                </p>
               )}
-            </div>
-            <div className="mb-2 text-xs" style={{ color: "var(--c-text-2)" }}>
-              {service.categoryLabel} · by {service.providerName}
-            </div>
-            <div className="mb-2 text-sm font-medium">
-              {formatRate(service.rateAmount, service.rateType)}
-              {service.negotiable && (
-                <span className="ml-1.5 text-xs font-normal" style={{ color: "var(--c-text-3)" }}>
-                  negotiable
-                </span>
-              )}
-            </div>
-            {service.description && (
-              <p className="mb-2 text-xs leading-relaxed" style={{ color: "var(--c-text-2)" }}>
-                {service.description}
-              </p>
-            )}
-            <div className="text-xs" style={{ color: "var(--c-text-3)" }}>
-              📍 {service.barangay}, {service.city} · {LEAD_TIME_LABELS[service.leadTime]}
-            </div>
-          </Link>
+              <div className="text-xs" style={{ color: "var(--c-text-3)" }}>
+                📍 {service.barangay}, {service.city} · {LEAD_TIME_LABELS[service.leadTime]}
+              </div>
+            </Link>
+          </BlurFade>
         ))}
       </div>
 
-      <div className="cc-card mt-4">
-        <div className="mb-1.5 text-sm font-medium">🧾 How payment works</div>
-        <div className="text-xs leading-relaxed" style={{ color: "var(--c-text-2)" }}>
-          Community Connect connects you with providers — payments are arranged
-          directly with them (cash, GCash, Maya). Agree on the price and payment
-          method before the work starts.
+      <BlurFade delay={0.1} inView>
+        <div className="cc-card mt-5">
+          <div className="mb-1.5 text-sm font-semibold">🧾 How payment works</div>
+          <p className="text-xs leading-relaxed" style={{ color: "var(--c-text-2)" }}>
+            Community Connect connects you with providers — payments are arranged
+            directly with them (cash, GCash, Maya). Agree on the price and payment
+            method before the work starts.
+          </p>
         </div>
-      </div>
+      </BlurFade>
     </div>
   );
 }

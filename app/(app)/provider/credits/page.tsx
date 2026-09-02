@@ -8,6 +8,8 @@ import {
   formatPeso,
   type TopUpMethod,
 } from "@/lib/catalog";
+import { BlurFade } from "@/components/mp/blur-fade";
+import { AnimatedNumber } from "@/components/mp/animated-number";
 import { TopUpForm } from "./topup-form";
 
 const TOPUP_STATUS_STYLES: Record<string, { bg: string; fg: string }> = {
@@ -48,50 +50,69 @@ export default async function CreditsPage({
         </div>
       )}
 
-      <div className="cc-card mb-5">
-        <div className="mb-3 flex items-center justify-between">
-          <div>
-            <div className="text-xs" style={{ color: "var(--c-text-2)" }}>Balance</div>
-            <div className="text-2xl font-semibold">{formatPeso(profile.credits)}</div>
-          </div>
-          <div className="text-right">
-            <div className="text-xs" style={{ color: "var(--c-text-2)" }}>Free accepts</div>
-            <div className="text-2xl font-semibold">
-              {allowance.freeRemaining}
-              <span className="text-sm font-normal" style={{ color: "var(--c-text-3)" }}>
-                {" "}/ {FREE_MONTHLY_ACCEPTS}
-              </span>
+      <BlurFade delay={0.05}>
+        <div
+          className="cc-card mb-5"
+          style={{
+            background: "linear-gradient(135deg,#0b4480 0%,#0e7a5f 130%)",
+            color: "#fff",
+            boxShadow: "var(--shadow-btn)",
+          }}
+        >
+          <div className="mb-3 flex items-end justify-between">
+            <div>
+              <div className="mb-0.5 text-[11px] font-medium uppercase tracking-[0.12em] opacity-75">
+                Balance
+              </div>
+              <div className="text-[32px] font-semibold leading-none tracking-tight">
+                <AnimatedNumber value={profile.credits} prefix="₱" />
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="mb-0.5 text-[11px] font-medium uppercase tracking-[0.12em] opacity-75">
+                Free accepts
+              </div>
+              <div className="text-[32px] font-semibold leading-none tracking-tight cc-num">
+                {allowance.freeRemaining}
+                <span className="text-base font-normal opacity-70"> / {FREE_MONTHLY_ACCEPTS}</span>
+              </div>
             </div>
           </div>
+          <p className="text-xs leading-relaxed opacity-80">
+            Extra accepts cost {formatPeso(EXTRA_ACCEPT_FEE_PESOS)} each, deducted
+            from your balance. Credits are non-refundable and can only be used for
+            platform fees.
+          </p>
         </div>
-        <div className="text-xs leading-relaxed" style={{ color: "var(--c-text-3)" }}>
-          Extra accepts cost {formatPeso(EXTRA_ACCEPT_FEE_PESOS)} each, deducted
-          from your balance. Credits are non-refundable and can only be used for
-          platform fees.
-        </div>
-      </div>
+      </BlurFade>
 
-      <TopUpForm />
+      <BlurFade delay={0.1}>
+        <TopUpForm />
+      </BlurFade>
 
       {topups.length > 0 && (
         <div className="mt-5">
-          <h2 className="mb-2 text-sm font-semibold">My top-up requests</h2>
-          <div className="flex flex-col gap-2">
-            {topups.map((t) => {
+          <BlurFade delay={0.12}>
+            <h2 className="mb-2.5 text-sm font-semibold">My top-up requests</h2>
+          </BlurFade>
+          <div className="flex flex-col gap-2.5">
+            {topups.map((t, i) => {
               const st = TOPUP_STATUS_STYLES[t.status] ?? TOPUP_STATUS_STYLES.pending;
               return (
-                <div key={t.id} className="cc-card flex items-center justify-between">
-                  <div>
-                    <div className="text-sm font-medium">{formatPeso(t.amount)}</div>
-                    <div className="text-xs" style={{ color: "var(--c-text-2)" }}>
-                      {TOPUP_METHOD_LABELS[t.method as TopUpMethod] ?? t.method} · ref {t.refNumber}
-                      {t.note ? ` · ${t.note}` : ""}
+                <BlurFade key={t.id} delay={0.14 + i * 0.06}>
+                  <div className="cc-card flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-semibold cc-num">{formatPeso(t.amount)}</div>
+                      <div className="text-xs" style={{ color: "var(--c-text-2)" }}>
+                        {TOPUP_METHOD_LABELS[t.method as TopUpMethod] ?? t.method} · ref {t.refNumber}
+                        {t.note ? ` · ${t.note}` : ""}
+                      </div>
                     </div>
+                    <span className="cc-badge" style={{ background: st.bg, color: st.fg }}>
+                      {t.status}
+                    </span>
                   </div>
-                  <span className="cc-badge" style={{ background: st.bg, color: st.fg }}>
-                    {t.status}
-                  </span>
-                </div>
+                </BlurFade>
               );
             })}
           </div>
@@ -99,38 +120,44 @@ export default async function CreditsPage({
       )}
 
       <div className="mt-5">
-        <h2 className="mb-2 text-sm font-semibold">Credit history</h2>
-        <div className="flex flex-col gap-2">
+        <BlurFade delay={0.12}>
+          <h2 className="mb-2.5 text-sm font-semibold">Credit history</h2>
+        </BlurFade>
+        <div className="flex flex-col gap-2.5">
           {events.length === 0 && (
-            <div className="cc-card text-center text-xs" style={{ color: "var(--c-text-2)" }}>
-              Nothing yet — accepts and top-ups will appear here.
-            </div>
+            <BlurFade delay={0.14}>
+              <div className="cc-card text-center text-xs" style={{ color: "var(--c-text-2)" }}>
+                Nothing yet — accepts and top-ups will appear here.
+              </div>
+            </BlurFade>
           )}
-          {events.map((e) => (
-            <div key={e.id} className="cc-card flex items-center justify-between">
-              <div>
-                <div className="text-sm font-medium">
-                  {e.type === "topup"
-                    ? "Top-up"
-                    : e.type === "free_accept"
-                      ? "Free accept"
-                      : "Accept fee"}
+          {events.map((e, i) => (
+            <BlurFade key={e.id} delay={0.14 + i * 0.05}>
+              <div className="cc-card flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-semibold">
+                    {e.type === "topup"
+                      ? "Top-up"
+                      : e.type === "free_accept"
+                        ? "Free accept"
+                        : "Accept fee"}
+                  </div>
+                  <div className="text-xs" style={{ color: "var(--c-text-2)" }}>{e.note}</div>
                 </div>
-                <div className="text-xs" style={{ color: "var(--c-text-2)" }}>{e.note}</div>
+                <div className="text-right">
+                  <div
+                    className="text-sm font-semibold cc-num"
+                    style={{ color: e.amount > 0 ? "var(--c-success)" : e.amount < 0 ? "var(--c-danger)" : "var(--c-text-2)" }}
+                  >
+                    {e.amount > 0 ? "+" : ""}
+                    {e.amount === 0 ? "₱0" : formatPeso(e.amount)}
+                  </div>
+                  <div className="text-xs cc-num" style={{ color: "var(--c-text-3)" }}>
+                    bal {formatPeso(e.balanceAfter)}
+                  </div>
+                </div>
               </div>
-              <div className="text-right">
-                <div
-                  className="text-sm font-semibold"
-                  style={{ color: e.amount > 0 ? "#1e6b2e" : e.amount < 0 ? "var(--c-danger)" : "var(--c-text-2)" }}
-                >
-                  {e.amount > 0 ? "+" : ""}
-                  {e.amount === 0 ? "₱0" : formatPeso(e.amount)}
-                </div>
-                <div className="text-xs" style={{ color: "var(--c-text-3)" }}>
-                  bal {formatPeso(e.balanceAfter)}
-                </div>
-              </div>
-            </div>
+            </BlurFade>
           ))}
         </div>
       </div>

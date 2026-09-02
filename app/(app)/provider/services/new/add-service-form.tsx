@@ -124,8 +124,14 @@ export function AddServiceForm() {
         style={{ background: "var(--c-border)" }}
       >
         <div
-          className="h-full rounded-full transition-all"
-          style={{ background: "var(--c-accent)", width: `${STEP_PROGRESS[step]}%` }}
+          className="h-full rounded-full"
+          style={{
+            background: "linear-gradient(90deg, var(--c-accent), var(--c-accent-2))",
+            width: `${STEP_PROGRESS[step]}%`,
+            transitionProperty: "width",
+            transitionDuration: "400ms",
+            transitionTimingFunction: "cubic-bezier(0.2, 0, 0, 1)",
+          }}
         />
       </div>
 

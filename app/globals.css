@@ -1,28 +1,76 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f5f4f0;
-  --foreground: #26251f;
+  --background: #f6f5f1;
+  --foreground: #23221c;
 
   --c-surface: #ffffff;
-  --c-surface-2: #f0efe9;
-  --c-border: #e2ded5;
-  --c-border-md: #c8c2b5;
+  --c-surface-2: #efeee8;
+  --c-border: #e3dfd6;
+  --c-border-md: #c9c3b6;
 
-  --c-text: #26251f;
-  --c-text-2: #6b6657;
-  --c-text-3: #9c9486;
+  --c-text: #23221c;
+  --c-text-2: #6d6858;
+  --c-text-3: #9f9788;
 
   --c-accent: #0b4480;
+  --c-accent-2: #0e7a5f;
   --c-accent-light: #e6f0fb;
+  --c-gold: #b97f16;
 
   --c-danger: #8b1f1f;
   --c-danger-light: #fdeaea;
+  --c-success: #1e6b2e;
+  --c-success-light: #e7f4e9;
 
-  --r-md: 8px;
-  --r-lg: 14px;
-  --r-xl: 20px;
+  /* Concentric radius scale: outer = inner + padding */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 24px;
   --r-full: 999px;
+
+  /* Layered shadow borders (adapted from watermelon-platform surfaces guide):
+     ring + lift + ambient. Replaces solid borders on elevated surfaces. */
+  --shadow-border:
+    0 0 0 1px rgba(0, 0, 0, 0.06),
+    0 1px 2px -1px rgba(0, 0, 0, 0.05),
+    0 2px 6px -1px rgba(0, 0, 0, 0.04);
+  --shadow-border-hover:
+    0 0 0 1px rgba(0, 0, 0, 0.09),
+    0 2px 4px -1px rgba(0, 0, 0, 0.07),
+    0 6px 14px -3px rgba(0, 0, 0, 0.09);
+  --shadow-lift:
+    0 0 0 1px rgba(0, 0, 0, 0.07),
+    0 10px 28px -8px rgba(11, 68, 128, 0.25);
+  --shadow-btn:
+    0 0 0 1px rgba(11, 68, 128, 0.16),
+    0 1px 2px rgba(11, 68, 128, 0.18),
+    0 6px 16px -6px rgba(11, 68, 128, 0.45);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #14130e;
+    --foreground: #ededed;
+    --c-surface: #1c1b15;
+    --c-surface-2: #242318;
+    --c-border: #35332a;
+    --c-border-md: #484537;
+    --c-text: #ededed;
+    --c-text-2: #b1ab9e;
+    --c-text-3: #847d6c;
+    --c-accent-light: #16294a;
+    /* Dark: layered depth is invisible — a single white ring reads cleaner. */
+    --shadow-border: 0 0 0 1px rgba(255, 255, 255, 0.08);
+    --shadow-border-hover: 0 0 0 1px rgba(255, 255, 255, 0.14);
+    --shadow-lift:
+      0 0 0 1px rgba(255, 255, 255, 0.1),
+      0 10px 28px -8px rgba(0, 0, 0, 0.6);
+    --shadow-btn:
+      0 0 0 1px rgba(255, 255, 255, 0.12),
+      0 6px 16px -6px rgba(0, 0, 0, 0.5);
+  }
 }
 
 @theme inline {
@@ -32,19 +80,10 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #16150f;
-    --foreground: #ededed;
-    --c-surface: #1e1d17;
-    --c-surface-2: #26251f;
-    --c-border: #38362c;
-    --c-border-md: #4a4738;
-    --c-text: #ededed;
-    --c-text-2: #b3ada0;
-    --c-text-3: #847d6c;
-    --c-accent-light: #16294a;
-  }
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 body {
@@ -53,12 +92,54 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+/* Watermelon typography rules: balanced headings, orphans-free body copy. */
+h1, h2, h3 { text-wrap: balance; }
+p { text-wrap: pretty; }
+
+/* --- Surfaces --------------------------------------------------------------- */
+
 .cc-card {
   background: var(--c-surface);
-  border: 1px solid var(--c-border);
   border-radius: var(--r-lg);
   padding: 16px;
+  box-shadow: var(--shadow-border);
+  transition-property: box-shadow, transform;
+  transition-duration: 180ms;
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
 }
+
+.cc-card-hover:hover {
+  box-shadow: var(--shadow-border-hover);
+  transform: translateY(-2px);
+}
+
+.cc-card-interactive {
+  background: var(--c-surface);
+  border-radius: var(--r-lg);
+  padding: 16px;
+  box-shadow: var(--shadow-border);
+  transition-property: box-shadow, transform;
+  transition-duration: 180ms;
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+.cc-card-interactive:hover {
+  box-shadow: var(--shadow-lift);
+  transform: translateY(-3px);
+}
+
+.cc-card-interactive:active {
+  transform: translateY(-1px) scale(0.985);
+}
+
+.cc-glass {
+  background: color-mix(in srgb, var(--background) 78%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* --- Forms ------------------------------------------------------------------ */
+/* Inputs keep real borders: form outlines are an accessibility aid. */
 
 .cc-input {
   width: 100%;
@@ -70,11 +151,13 @@ body {
   color: var(--c-text);
   font-size: 14px;
   outline: none;
-  transition: border-color 0.15s;
+  transition-property: border-color, box-shadow;
+  transition-duration: 150ms;
 }
 
 .cc-input:focus {
   border-color: var(--c-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-accent) 16%, transparent);
 }
 
 .cc-label {
@@ -83,6 +166,9 @@ body {
   color: var(--c-text-2);
   margin-bottom: 8px;
 }
+
+/* --- Buttons ------------------------------------------------------------------ */
+/* 48px min-height keeps every tap target well above the 40px minimum. */
 
 .cc-btn {
   display: inline-flex;
@@ -93,70 +179,119 @@ body {
   min-height: 48px;
   padding: 0 16px;
   border-radius: var(--r-md);
-  font-weight: 500;
+  font-weight: 600;
   font-size: 14px;
-  transition: opacity 0.15s, background 0.15s;
+  cursor: pointer;
+  transition-property: transform, box-shadow, opacity, background;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+.cc-btn:active:not(:disabled) {
+  transform: scale(0.96);
 }
 
 .cc-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
 .cc-btn-primary {
-  background: var(--c-accent);
+  background: linear-gradient(135deg, var(--c-accent) 0%, var(--c-accent-2) 130%);
   color: #fff;
+  box-shadow: var(--shadow-btn);
 }
 
 .cc-btn-primary:hover:not(:disabled) {
-  opacity: 0.9;
+  filter: brightness(1.08);
 }
 
 .cc-btn-secondary {
-  background: var(--c-surface-2);
+  background: var(--c-surface);
   color: var(--c-text);
-  border: 1px solid var(--c-border-md);
+  box-shadow: var(--shadow-border);
+}
+
+.cc-btn-secondary:hover:not(:disabled) {
+  box-shadow: var(--shadow-border-hover);
+}
+
+.cc-btn-ghost {
+  background: transparent;
+  color: var(--c-text-2);
+  min-height: 40px;
+}
+
+.cc-btn-ghost:hover:not(:disabled) {
+  color: var(--c-text);
+  background: var(--c-surface-2);
+}
+
+/* --- Chips & badges -------------------------------------------------------------- */
+
+.cc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+  padding: 0 13px;
+  border-radius: var(--r-full);
+  background: var(--c-surface);
+  color: var(--c-text);
+  font-size: 12.5px;
+  font-weight: 550;
+  white-space: nowrap;
+  box-shadow: var(--shadow-border);
+  transition-property: transform, box-shadow, background, color;
+  transition-duration: 150ms;
+}
+
+.cc-chip:hover {
+  box-shadow: var(--shadow-border-hover);
+}
+
+.cc-chip:active {
+  transform: scale(0.96);
+}
+
+.cc-chip-active {
+  background: linear-gradient(135deg, var(--c-accent) 0%, var(--c-accent-2) 130%);
+  color: #fff;
+  box-shadow: var(--shadow-btn);
+}
+
+.cc-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: var(--r-full);
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
 }
 
 .cc-role-card {
   display: flex;
   gap: 12px;
   align-items: flex-start;
-  border: 1.5px solid var(--c-border);
   border-radius: var(--r-lg);
   padding: 16px;
   text-align: left;
-  transition: all 0.15s;
+  background: var(--c-surface);
+  box-shadow: var(--shadow-border);
+  cursor: pointer;
+  transition-property: transform, box-shadow;
+  transition-duration: 180ms;
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
 }
 
 .cc-role-card:hover {
-  border-color: var(--c-accent);
-  background: var(--c-accent-light);
+  box-shadow: var(--shadow-border-hover);
+  transform: translateY(-2px);
 }
 
-.cc-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  min-height: 32px;
-  padding: 0 12px;
-  border: 1.5px solid var(--c-border-md);
-  border-radius: var(--r-full);
-  background: var(--c-surface);
-  color: var(--c-text);
-  font-size: 12px;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.cc-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: var(--r-full);
-  font-size: 10.5px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+.cc-role-card:active {
+  transform: scale(0.98);
 }
 
 .cc-error {
@@ -164,5 +299,51 @@ body {
   color: var(--c-danger);
   background: var(--c-danger-light);
   border-radius: var(--r-md);
-  padding: 8px 12px;
+  padding: 10px 12px;
+}
+
+/* --- Utilities ------------------------------------------------------------------ */
+
+.cc-gradient-text {
+  background: linear-gradient(120deg, var(--c-accent) 20%, var(--c-accent-2) 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.cc-num {
+  font-variant-numeric: tabular-nums;
+}
+
+.cc-progress {
+  height: 8px;
+  border-radius: var(--r-full);
+  background: color-mix(in srgb, currentColor 18%, transparent);
+  overflow: hidden;
+}
+
+.cc-progress > div {
+  height: 100%;
+  border-radius: var(--r-full);
+  background: currentColor;
+  transition-property: width;
+  transition-duration: 700ms;
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* --- Marquee (components/mp/marquee) ------------------------------------------ */
+
+@keyframes cc-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* --- Accessibility ---------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
