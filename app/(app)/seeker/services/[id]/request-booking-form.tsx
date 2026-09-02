@@ -7,9 +7,11 @@ import { isNextRedirect } from "@/lib/client-errors";
 export function RequestBookingForm({
   serviceId,
   rate,
+  providerVerified,
 }: {
   serviceId: string;
   rate: string;
+  providerVerified: boolean;
 }) {
   const [preferredDate, setPreferredDate] = useState("");
   const [preferredTime, setPreferredTime] = useState("");
@@ -100,6 +102,16 @@ export function RequestBookingForm({
           maxLength={300}
         />
       </div>
+
+      {!providerVerified && (
+        <div
+          className="rounded-[12px] p-3 text-[11.5px] leading-relaxed"
+          style={{ background: "var(--c-surface-2)", color: "var(--c-text-2)" }}
+        >
+          ℹ️ This provider isn&apos;t ID-verified (optional). Check their completed
+          jobs and vouches above — proceed only when you&apos;re comfortable.
+        </div>
+      )}
 
       <button type="submit" className="cc-btn cc-btn-primary" disabled={pending}>
         {pending ? "Sending…" : "Send booking request"}

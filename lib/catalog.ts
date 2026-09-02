@@ -152,3 +152,34 @@ export const MAX_TOPUP_PESOS = 10000;
 export function formatPeso(amount: number): string {
   return `₱${amount.toLocaleString("en-PH")}`;
 }
+
+// --- ID verification (admin-approved badge) -------------------------------------
+
+export const VERIFICATION_ID_TYPES = [
+  "philsys",
+  "drivers_license",
+  "umid",
+  "passport",
+  "barangay_clearance",
+  "other_gov",
+] as const;
+export type VerificationIdType = (typeof VERIFICATION_ID_TYPES)[number];
+
+export const VERIFICATION_ID_LABELS: Record<VerificationIdType, string> = {
+  philsys: "PhilSys National ID",
+  drivers_license: "Driver's License",
+  umid: "UMID",
+  passport: "Passport",
+  barangay_clearance: "Barangay Clearance",
+  other_gov: "Other government ID",
+};
+
+/** Verified status is valid for one year, then lapses (annual re-verification). */
+export const VERIFICATION_VALIDITY_DAYS = 365;
+
+export type VerificationStatus =
+  | "unverified"
+  | "pending"
+  | "verified"
+  | "rejected"
+  | "expired";

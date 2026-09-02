@@ -5,6 +5,7 @@ import { getProviderServices } from "@/lib/firestore";
 import { listProviderBookings } from "@/lib/bookings";
 import { allowanceFor } from "@/lib/wallet";
 import { nextTrustTier, trustBadgeStyle, trustTier, trustSummaryLine } from "@/lib/trust";
+import { effectiveVerification } from "@/lib/verifications";
 import { acceptBookingAction, declineBookingAction } from "@/app/actions/bookings";
 import { toggleServiceActiveAction } from "@/app/actions/services";
 import {
@@ -102,6 +103,42 @@ export default async function ProviderHomePage({
             After your free accepts: {formatPeso(EXTRA_ACCEPT_FEE_PESOS)} per accept from credits →
           </div>
         </Link>
+      </BlurFade>
+
+      {/* Verification status */}
+      <BlurFade delay={0.08}>
+        {(() => {
+          const vs = effectiveVerification(profile.verificationStatus, profile.verifiedUntil);
+          return (
+            <div className="cc-card mb-4 flex items-center justify-between gap-3">
+              <div>
+                <div className="mb-0.5 flex items-center gap-2">
+                  {vs === "verified" ? (
+                    <span className="text-sm font-semibold">✅ ID Verified</span>
+                  ) : vs === "pending" ? (
+                    <span className="text-sm font-semibold">⏳ ID under review</span>
+                  ) : (
+                    <span className="text-sm font-semibold" style={{ color: "var(--c-text-2)" }}>
+                      Not ID-verified yet
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs leading-relaxed" style={{ color: "var(--c-text-2)" }}>
+                  {vs === "verified"
+                    ? `Renews by ${profile.verifiedUntil?.toLocaleDateString("en-PH") ?? "—"} — clients see your badge.`
+                    : "Optional & free: an admin-reviewed ✅ badge that reassures clients. You can work without it."}
+                </p>
+              </div>
+              <Link
+                href="/provider/verification"
+                className="cc-btn cc-btn-secondary"
+                style={{ width: "auto", minHeight: 38, fontSize: 12.5, padding: "0 14px", flexShrink: 0 }}
+              >
+                {vs === "verified" ? "View" : vs === "pending" ? "Status" : "Start"}
+              </Link>
+            </div>
+          );
+        })()}
       </BlurFade>
 
       {/* Trust status */}

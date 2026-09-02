@@ -4,6 +4,7 @@ import { getCurrentProfile } from "@/lib/dal";
 import { browseServices, getProviderTrust } from "@/lib/firestore";
 import { getVouchedProviderUids, listSeekerBookings, type Booking } from "@/lib/bookings";
 import { trustBadgeStyle, trustTier, trustSummaryLine } from "@/lib/trust";
+import { effectiveVerification } from "@/lib/verifications";
 import {
   SERVICE_CATEGORIES,
   LEAD_TIME_LABELS,
@@ -36,6 +37,7 @@ export default async function SeekerHomePage({
   const params = await searchParams;
   const rawCategory = typeof params.category === "string" ? params.category : undefined;
   const category = rawCategory ? getCategory(rawCategory) : undefined;
+  const verifiedOnly = typeof params.verified === "string";
   const banner = typeof params.booked === "string"
     ? "Request sent — you'll see the provider's response below."
     : typeof params.cancelled === "string"
@@ -61,6 +63,13 @@ export default async function SeekerHomePage({
       bookings.map((b) => b.providerUid)
     ),
   ]);
+  const isVerified = (uid: string) => {
+    const t = trust.get(uid);
+    return t ? effectiveVerification(t.verificationStatus, t.verifiedUntil) === "verified" : false;
+  };
+  const visibleServices = verifiedOnly
+    ? services.filter((x) => isVerified(x.providerUid))
+    : services;
 
   return (
     <div className="mx-auto w-full max-w-sm">
@@ -148,10 +157,16 @@ export default async function SeekerHomePage({
           >
             All
           </Link>
+          <Link
+            href={`/seeker${category ? `?category=${category.slug}&` : "?"}verified=1`}
+            className={`cc-chip ${verifiedOnly ? "cc-chip-active" : ""}`}
+          >
+            ✅ Verified only
+          </Link>
           {SERVICE_CATEGORIES.map((cat) => (
             <Link
               key={cat.slug}
-              href={`/seeker?category=${cat.slug}`}
+              href={`/seeker?category=${cat.slug}${verifiedOnly ? "&verified=1" : ""}`}
               className={`cc-chip ${category?.slug === cat.slug ? "cc-chip-active" : ""}`}
             >
               <span className="text-sm leading-none">{cat.emoji}</span> {cat.label}
@@ -168,13 +183,15 @@ export default async function SeekerHomePage({
                 {category ? `No ${category.label.toLowerCase()} services yet` : "No services listed yet"}
               </div>
               <div className="text-xs" style={{ color: "var(--c-text-2)" }}>
-                Providers are signing up — check another category, or come back soon.
+                {verifiedOnly
+                  ? "No ID-verified providers here yet — try clearing the filter, or check a provider's completed jobs and vouches."
+                  : "Providers are signing up — check another category, or come back soon."}
               </div>
             </div>
           </BlurFade>
         )}
 
-        {services.map((service, i) => (
+        {visibleServices.map((service, i) => (
           <BlurFade key={service.id} delay={0.04 * i} inView>
             <Link href={`/seeker/services/${service.id}`} className="cc-card-interactive block">
               <div className="mb-1 flex items-start justify-between gap-2">
@@ -196,10 +213,15 @@ export default async function SeekerHomePage({
                 if (!t) return null;
                 const tier = trustTier(t.completedCount, t.vouches);
                 return (
-                  <div className="mb-2.5 flex items-center gap-1.5">
+                  <div className="mb-2.5 flex flex-wrap items-center gap-1.5">
                     <span className="cc-badge" style={trustBadgeStyle(tier.key)}>
                       {tier.emoji} {tier.label}
                     </span>
+                    {isVerified(service.providerUid) && (
+                      <span className="cc-badge" style={{ background: "var(--c-accent-light)", color: "var(--c-accent)" }}>
+                        ✅ ID Verified
+                      </span>
+                    )}
                     <span className="text-[11px]" style={{ color: "var(--c-text-3)" }}>
                       {trustSummaryLine(t.completedCount, t.vouches)}
                     </span>

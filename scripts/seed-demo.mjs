@@ -9,7 +9,7 @@
 import { readFileSync } from "node:fs";
 import { initializeApp, cert } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 
 // --- parse .env.local (no dotenv dependency) ---
 const env = {};
@@ -59,6 +59,9 @@ async function cleanOnly() {
   await clearSeeds("topup_requests");
   await clearSeeds("wallet_events");
   await clearSeeds("vouch_records");
+  await clearSeeds("verifications");
+  await clearSeeds("verification_id_hashes");
+  await clearSeeds("audit_log");
   const seedProfiles = await db.collection("profiles").where("seed", "==", true).get();
   for (const d of seedProfiles.docs) {
     const deps = await d.ref.collection("dependents").where("seed", "==", true).get();
@@ -88,6 +91,9 @@ async function main() {
   await clearSeeds("topup_requests");
   await clearSeeds("wallet_events");
   await clearSeeds("vouch_records");
+  await clearSeeds("verifications");
+  await clearSeeds("verification_id_hashes");
+  await clearSeeds("audit_log");
   const seedProfiles = await db.collection("profiles").where("seed", "==", true).get();
   await Promise.all(seedProfiles.docs.map((d) => d.ref.delete()));
 
@@ -105,6 +111,10 @@ async function main() {
       // Trust ladder demos: Ramon = Rising, Jun = Trusted, Elena = New
       completedCount: p.key === "p1" ? 6 : p.key === "p3" ? 14 : 0,
       vouches: p.key === "p1" ? 2 : p.key === "p3" ? 5 : 0,
+      // Verification demos: Jun = verified (badge), Elena = pending review
+      verificationStatus: p.key === "p3" ? "verified" : p.key === "p2" ? "pending" : null,
+      verifiedAt: p.key === "p3" ? FieldValue.serverTimestamp() : null,
+      verifiedUntil: p.key === "p3" ? Timestamp.fromDate(new Date(Date.now() + 300 * 24 * 3600 * 1000)) : null,
       seed: true,
       createdAt: FieldValue.serverTimestamp(),
     });
@@ -200,6 +210,51 @@ async function main() {
     seed: true,
     createdAt: FieldValue.serverTimestamp(),
   });
+
+  // Verification records: approved one for Jun (already purged, as post-decision),
+  // pending one for Elena with placeholder images for the admin queue demo.
+  await db.collection("verifications").add({
+    uid: uids.p3,
+    requesterName: people[3].name,
+    legalName: "Jun Tuboran",
+    idType: "drivers_license",
+    idNumberLast4: "4471",
+    mobile: people[3].mobile,
+    facebookUrl: "",
+    status: "approved",
+    decidedAt: FieldValue.serverTimestamp(),
+    decidedBy: uids.admin,
+    rejectionReason: null,
+    fileIds: [],
+    purged: true,
+    seed: true,
+    submittedAt: FieldValue.serverTimestamp(),
+  });
+  await db.collection("verification_id_hashes").add({
+    usedByUid: uids.p3,
+    seed: true,
+    at: FieldValue.serverTimestamp(),
+  });
+  const svg = (label) =>
+    Buffer.from(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="250"><rect width="400" height="250" fill="#e8e4d8"/><text x="200" y="120" font-family="sans-serif" font-size="22" fill="#6b6657" text-anchor="middle">${label}</text><text x="200" y="150" font-family="sans-serif" font-size="12" fill="#9c9486" text-anchor="middle">seed placeholder — replace at review</text></svg>`
+    ).toString("base64");
+  const elenaReq = await db.collection("verifications").add({
+    uid: uids.p2,
+    requesterName: people[2].name,
+    legalName: "Elena Bautista",
+    idType: "philsys",
+    idNumber: "PSN-2024-0043-1187",
+    idNumberLast4: "1187",
+    mobile: people[2].mobile,
+    facebookUrl: "https://facebook.com/elena.bautista.demo",
+    status: "pending",
+    fileIds: [],
+    seed: true,
+    submittedAt: FieldValue.serverTimestamp(),
+  });
+  await elenaReq.collection("files").add({ mime: "image/svg+xml", data: svg("PhilSys ID — front"), seed: true });
+  await elenaReq.collection("files").add({ mime: "image/svg+xml", data: svg("Selfie holding ID"), seed: true });
 
   console.log("Seed complete. Accounts (password for all: " + PASSWORD + "):");
   for (const p of people) console.log(`  ${p.role.padEnd(8)} ${p.email}  (${p.name})`);

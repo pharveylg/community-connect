@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getCurrentProfile } from "@/lib/dal";
 import { getProfile, getServiceListing } from "@/lib/firestore";
 import { trustBadgeStyle, trustTier, trustSummaryLine } from "@/lib/trust";
+import { effectiveVerification } from "@/lib/verifications";
 import { LEAD_TIME_LABELS, RATE_TYPE_LABELS, type RateType } from "@/lib/catalog";
 import { BlurFade } from "@/components/mp/blur-fade";
 import { AnimatedNumber } from "@/components/mp/animated-number";
@@ -44,20 +45,36 @@ export default async function ServiceDetailPage({
           {service.categoryLabel} · by {service.providerName}
         </div>
         {provider && (
-          <div className="mb-4 flex items-center gap-2">
-            {(() => {
-              const tier = trustTier(provider.completedCount, provider.vouches);
-              return (
-                <>
-                  <span className="cc-badge" style={trustBadgeStyle(tier.key)}>
-                    {tier.emoji} {tier.label}
-                  </span>
-                  <span className="text-[11px]" style={{ color: "var(--c-text-3)" }}>
-                    {trustSummaryLine(provider.completedCount, provider.vouches)}
-                  </span>
-                </>
-              );
-            })()}
+          <div className="mb-4">
+            <div className="mb-1.5 flex flex-wrap items-center gap-2">
+              {(() => {
+                const tier = trustTier(provider.completedCount, provider.vouches);
+                return (
+                  <>
+                    <span className="cc-badge" style={trustBadgeStyle(tier.key)}>
+                      {tier.emoji} {tier.label}
+                    </span>
+                    {effectiveVerification(provider.verificationStatus, provider.verifiedUntil) ===
+                      "verified" && (
+                      <span className="cc-badge" style={{ background: "var(--c-accent-light)", color: "var(--c-accent)" }}>
+                        ✅ ID Verified
+                      </span>
+                    )}
+                    <span className="text-[11px]" style={{ color: "var(--c-text-3)" }}>
+                      {trustSummaryLine(provider.completedCount, provider.vouches)}
+                    </span>
+                  </>
+                );
+              })()}
+            </div>
+            {effectiveVerification(provider.verificationStatus, provider.verifiedUntil) !==
+              "verified" && (
+              <p className="text-xs leading-relaxed" style={{ color: "var(--c-text-2)" }}>
+                ℹ️ This provider hasn&apos;t completed ID verification (it&apos;s
+                optional). You can still check their completed jobs and client
+                vouches. Agree on payment only when you&apos;re comfortable.
+              </p>
+            )}
           </div>
         )}
       </BlurFade>
@@ -88,6 +105,11 @@ export default async function ServiceDetailPage({
         ) : (
           <RequestBookingForm
             serviceId={service.id}
+            providerVerified={
+              provider
+                ? effectiveVerification(provider.verificationStatus, provider.verifiedUntil) === "verified"
+                : false
+            }
             rate={`₱${service.rateAmount.toLocaleString("en-PH")} ${RATE_TYPE_LABELS[service.rateType as RateType]}`}
           />
         )}

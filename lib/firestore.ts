@@ -23,6 +23,10 @@ export type Profile = {
   completedCount: number;
   /** Unique clients who vouched for this provider. */
   vouches: number;
+  /** ID-verification state (admin-approved badge; see lib/verifications). */
+  verificationStatus: string | null;
+  verifiedAt: Date | null;
+  verifiedUntil: Date | null;
 };
 
 export type Dependent = {
@@ -64,15 +68,23 @@ export async function getProfile(uid: string): Promise<Profile | null> {
     acceptCount: typeof data.acceptCount === "number" ? data.acceptCount : 0,
     completedCount: typeof data.completedCount === "number" ? data.completedCount : 0,
     vouches: typeof data.vouches === "number" ? data.vouches : 0,
+    verificationStatus: data.verificationStatus ?? null,
+    verifiedAt: data.verifiedAt instanceof Timestamp ? data.verifiedAt.toDate() : null,
+    verifiedUntil: data.verifiedUntil instanceof Timestamp ? data.verifiedUntil.toDate() : null,
   };
 }
 
 /** Batch trust lookup for browse pages: uid -> {completedCount, vouches}. */
-export async function getProviderTrust(
-  uids: string[]
-): Promise<Map<string, { completedCount: number; vouches: number }>> {
+export type ProviderStats = {
+  completedCount: number;
+  vouches: number;
+  verificationStatus: string | null;
+  verifiedUntil: Date | null;
+};
+
+export async function getProviderTrust(uids: string[]): Promise<Map<string, ProviderStats>> {
   const uniq = [...new Set(uids)].slice(0, 30);
-  const map = new Map<string, { completedCount: number; vouches: number }>();
+  const map = new Map<string, ProviderStats>();
   if (uniq.length === 0) return map;
   const db = getAdminDb();
   const snaps = await db.getAll(...uniq.map((id) => db.collection("profiles").doc(id)));
@@ -82,6 +94,8 @@ export async function getProviderTrust(
     map.set(snap.id, {
       completedCount: typeof d.completedCount === "number" ? d.completedCount : 0,
       vouches: typeof d.vouches === "number" ? d.vouches : 0,
+      verificationStatus: d.verificationStatus ?? null,
+      verifiedUntil: d.verifiedUntil instanceof Timestamp ? d.verifiedUntil.toDate() : null,
     });
   }
   return map;
@@ -108,6 +122,9 @@ export async function listProfiles(limit = 50): Promise<Profile[]> {
       acceptCount: typeof data.acceptCount === "number" ? data.acceptCount : 0,
       completedCount: typeof data.completedCount === "number" ? data.completedCount : 0,
       vouches: typeof data.vouches === "number" ? data.vouches : 0,
+      verificationStatus: data.verificationStatus ?? null,
+      verifiedAt: data.verifiedAt instanceof Timestamp ? data.verifiedAt.toDate() : null,
+      verifiedUntil: data.verifiedUntil instanceof Timestamp ? data.verifiedUntil.toDate() : null,
     };
   });
 }

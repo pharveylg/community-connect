@@ -159,6 +159,9 @@ export async function acceptBooking(
       acceptCount: typeof data.acceptCount === "number" ? data.acceptCount : 0,
       completedCount: typeof data.completedCount === "number" ? data.completedCount : 0,
       vouches: typeof data.vouches === "number" ? data.vouches : 0,
+      verificationStatus: data.verificationStatus ?? null,
+      verifiedAt: data.verifiedAt instanceof Timestamp ? data.verifiedAt.toDate() : null,
+      verifiedUntil: data.verifiedUntil instanceof Timestamp ? data.verifiedUntil.toDate() : null,
     };
 
     const period = currentPeriod();

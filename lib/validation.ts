@@ -6,6 +6,7 @@ import {
   TOPUP_METHODS,
   MIN_TOPUP_PESOS,
   MAX_TOPUP_PESOS,
+  VERIFICATION_ID_TYPES,
 } from "@/lib/catalog";
 
 // --- Philippine mobile numbers ------------------------------------------------
@@ -99,3 +100,20 @@ export const TopUpRequestSchema = z.object({
   refNumber: z.string().trim().min(4, "Please enter your payment reference number.").max(60),
 });
 export type TopUpRequestInput = z.infer<typeof TopUpRequestSchema>;
+
+// --- ID verification ---------------------------------------------------------------
+
+export const VerificationSchema = z.object({
+  legalName: z.string().trim().min(3, "Please enter your full legal name.").max(80),
+  idType: z.enum(VERIFICATION_ID_TYPES, "Please choose your ID type."),
+  idNumber: z.string().trim().min(4, "Please enter your ID number.").max(40),
+  mobile: PhMobileSchema,
+  facebookUrl: z
+    .string()
+    .trim()
+    .max(200)
+    .refine((v) => v === "" || /^https?:\/\//.test(v), "Paste a link starting with http(s)://")
+    .optional()
+    .default(""),
+});
+export type VerificationInput = z.infer<typeof VerificationSchema>;

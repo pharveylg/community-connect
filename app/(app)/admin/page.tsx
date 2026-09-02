@@ -2,6 +2,13 @@ import { redirect } from "next/navigation";
 import { getCurrentProfile } from "@/lib/dal";
 import { browseServices, listProfiles } from "@/lib/firestore";
 import { listAllWalletEvents, listPendingTopUps } from "@/lib/wallet";
+import {
+  getVerificationFiles,
+  listPendingVerifications,
+  type VerificationRequest,
+} from "@/lib/verifications";
+import { decideVerificationAction } from "@/app/actions/verifications";
+import { VERIFICATION_ID_LABELS, type VerificationIdType } from "@/lib/catalog";
 import { decideTopUpAction } from "@/app/actions/wallet";
 import { TOPUP_METHOD_LABELS, formatPeso, type TopUpMethod } from "@/lib/catalog";
 import { BlurFade } from "@/components/mp/blur-fade";
@@ -20,16 +27,29 @@ export default async function AdminHomePage({
     ? params.decided === "approved"
       ? "Top-up approved — credits posted."
       : "Top-up rejected."
-    : typeof params.error === "string"
-      ? params.error
-      : null;
+    : typeof params.verification === "string"
+      ? params.verification === "approved"
+        ? "Verification approved — badge granted, documents purged."
+        : "Verification rejected — reason sent to the provider."
+      : typeof params.error === "string"
+        ? params.error
+        : null;
 
-  const [pendingTopUps, users, events, listings] = await Promise.all([
+  const [pendingTopUps, users, events, listings, pendingVerifications] = await Promise.all([
     listPendingTopUps(),
     listProfiles(50),
     listAllWalletEvents(15),
     browseServices(),
+    listPendingVerifications(),
   ]);
+  const verificationFiles = await Promise.all(
+    pendingVerifications.map(async (v) => ({
+      requestId: v.id,
+      files: await getVerificationFiles(v.id),
+    }))
+  );
+  const filesFor = (id: string) =>
+    verificationFiles.find((x) => x.requestId === id)?.files ?? [];
   const providerCount = users.filter((u) => u.role === "provider").length;
 
   return (
@@ -72,6 +92,34 @@ export default async function AdminHomePage({
               <div className="text-xs" style={{ color: "var(--c-text-2)" }}>
                 {stat.label}
               </div>
+            </div>
+          </BlurFade>
+        ))}
+      </div>
+
+      {/* ID verifications */}
+      <BlurFade delay={0.11}>
+        <h2 className="mb-2.5 text-sm font-semibold">
+          ID verifications{" "}
+          {pendingVerifications.length > 0 && (
+            <span className="cc-badge ml-1" style={{ background: "var(--c-accent-light)", color: "var(--c-accent)" }}>
+              {pendingVerifications.length} pending
+            </span>
+          )}
+        </h2>
+      </BlurFade>
+      <div className="mb-5 flex flex-col gap-3">
+        {pendingVerifications.length === 0 && (
+          <BlurFade delay={0.13}>
+            <div className="cc-card text-center text-xs" style={{ color: "var(--c-text-2)" }}>
+              No pending verification requests.
+            </div>
+          </BlurFade>
+        )}
+        {pendingVerifications.map((v, i) => (
+          <BlurFade key={v.id} delay={0.13 + i * 0.07}>
+            <div className="cc-card">
+              <VerificationReviewCard v={v} files={filesFor(v.id)} />
             </div>
           </BlurFade>
         ))}
@@ -228,6 +276,71 @@ export default async function AdminHomePage({
           </BlurFade>
         ))}
       </div>
+    </div>
+  );
+}
+
+function VerificationReviewCard({
+  v,
+  files,
+}: {
+  v: VerificationRequest;
+  files: { mime: string; data: string }[];
+}) {
+  return (
+    <div>
+      <div className="mb-1 text-[15px] font-semibold">{v.requesterName}</div>
+      <div className="mb-2.5 text-xs leading-relaxed" style={{ color: "var(--c-text-2)" }}>
+        {v.legalName} · {VERIFICATION_ID_LABELS[v.idType as VerificationIdType]} (••••{" "}
+        {v.idNumberLast4}) · {v.mobile}
+        {v.facebookUrl ? ` · ${v.facebookUrl}` : ""}
+      </div>
+
+      {files.length > 0 && (
+        <div className="mb-3 flex gap-2 overflow-x-auto">
+          {files.map((f, idx) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={idx}
+              src={`data:${f.mime};base64,${f.data}`}
+              alt={idx === 0 ? "ID photo" : "Selfie with ID"}
+              className="h-40 rounded-[12px] object-cover"
+              style={{ boxShadow: "var(--shadow-border)" }}
+            />
+          ))}
+        </div>
+      )}
+
+      <form action={decideVerificationAction} className="flex flex-col gap-2">
+        <input type="hidden" name="requestId" value={v.id} />
+        <input
+          name="reason"
+          className="cc-input"
+          style={{ minHeight: 38, fontSize: 13 }}
+          placeholder="Note (required to reject — the provider sees it)"
+          maxLength={160}
+        />
+        <div className="flex gap-2">
+          <button
+            type="submit"
+            name="decision"
+            value="approved"
+            className="cc-btn cc-btn-primary"
+            style={{ width: "auto", minHeight: 40, fontSize: 13, padding: "0 16px" }}
+          >
+            ✅ Approve
+          </button>
+          <button
+            type="submit"
+            name="decision"
+            value="rejected"
+            className="cc-btn cc-btn-secondary"
+            style={{ width: "auto", minHeight: 40, fontSize: 13, padding: "0 16px" }}
+          >
+            ✕ Reject
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
