@@ -167,9 +167,12 @@ export function RegisterFlow() {
 
       {step === "basic" && (
         <>
-          <h1 className="mb-1 text-xl font-semibold">Create your account</h1>
+          <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--c-text-3)" }}>
+            Step 1 of 3
+          </div>
+          <h1 className="mb-1 text-[24px] font-semibold tracking-tight">Create your account</h1>
           <p className="mb-6 text-sm" style={{ color: "var(--c-text-2)" }}>
-            Step 1 of 3 — Basic details
+            Basic details — takes about a minute.
           </p>
           <form onSubmit={handleBasicSubmit} className="flex flex-col gap-4">
             <div>
@@ -242,9 +245,14 @@ export function RegisterFlow() {
 
       {step === "role" && (
         <>
-          <h1 className="mb-1 text-xl font-semibold">How will you use Community Connect?</h1>
+          <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--c-text-3)" }}>
+            Step 2 of 3
+          </div>
+          <h1 className="mb-1 text-[24px] font-semibold tracking-tight">
+            How will you use Community Connect?
+          </h1>
           <p className="mb-6 text-sm" style={{ color: "var(--c-text-2)" }}>
-            Step 2 of 3 — Choose your role
+            Choose your role — you can&apos;t change this later without contacting support.
           </p>
           <div className="flex flex-col gap-3">
             <button
@@ -253,12 +261,17 @@ export function RegisterFlow() {
               disabled={pending}
               onClick={() => handleSelectRole("seeker")}
             >
-              <span className="text-2xl">🔍</span>
+              <span
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] text-2xl"
+                style={{ background: "var(--c-accent-light)" }}
+              >
+                🔍
+              </span>
               <span>
-                <span className="mb-0.5 block font-semibold">Service seeker</span>
-                <span className="text-xs" style={{ color: "var(--c-text-2)" }}>
-                  Book transport, handymen, caregivers, event helpers, and more. Perfect for
-                  seniors and their families.
+                <span className="mb-1 block text-[15px] font-semibold">Service seeker</span>
+                <span className="block text-[13px] leading-relaxed" style={{ color: "var(--c-text-2)" }}>
+                  Book transport, handymen, caregivers, and more — for yourself or a
+                  family member. Free, always.
                 </span>
               </span>
             </button>
@@ -268,12 +281,17 @@ export function RegisterFlow() {
               disabled={pending}
               onClick={() => handleSelectRole("provider")}
             >
-              <span className="text-2xl">🛠</span>
+              <span
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] text-2xl"
+                style={{ background: "var(--c-success-light)" }}
+              >
+                🛠
+              </span>
               <span>
-                <span className="mb-0.5 block font-semibold">Service provider</span>
-                <span className="text-xs" style={{ color: "var(--c-text-2)" }}>
-                  List your services, set your own rates, manage your schedule, and grow your
-                  client base.
+                <span className="mb-1 block text-[15px] font-semibold">Service provider</span>
+                <span className="block text-[13px] leading-relaxed" style={{ color: "var(--c-text-2)" }}>
+                  List your services and set your own rates — even services you
+                  invent, like trash pickup or junk hauling.
                 </span>
               </span>
             </button>
@@ -283,9 +301,12 @@ export function RegisterFlow() {
 
       {step === "seekerOnboard" && (
         <>
-          <h1 className="mb-1 text-xl font-semibold">Who are you booking for?</h1>
+          <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--c-text-3)" }}>
+            Step 3 of 3
+          </div>
+          <h1 className="mb-1 text-[24px] font-semibold tracking-tight">Who are you booking for?</h1>
           <p className="mb-6 text-sm" style={{ color: "var(--c-text-2)" }}>
-            Step 3 of 3 — Booking preference
+            Booking preference — helps providers prepare.
           </p>
           <div className="flex flex-col gap-3">
             <button
@@ -294,10 +315,15 @@ export function RegisterFlow() {
               disabled={pending}
               onClick={() => handleBookingFor("self")}
             >
-              <span className="text-2xl">🙋</span>
+              <span
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] text-2xl"
+                style={{ background: "var(--c-accent-light)" }}
+              >
+                🙋
+              </span>
               <span>
-                <span className="mb-0.5 block font-semibold">Myself</span>
-                <span className="text-xs" style={{ color: "var(--c-text-2)" }}>
+                <span className="mb-1 block text-[15px] font-semibold">Myself</span>
+                <span className="block text-[13px] leading-relaxed" style={{ color: "var(--c-text-2)" }}>
                   I will personally be using the services I book.
                 </span>
               </span>
@@ -308,10 +334,15 @@ export function RegisterFlow() {
               disabled={pending}
               onClick={() => handleBookingFor("dependent")}
             >
-              <span className="text-2xl">👴</span>
+              <span
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] text-2xl"
+                style={{ background: "#fdf3dc" }}
+              >
+                👴
+              </span>
               <span>
-                <span className="mb-0.5 block font-semibold">A family member</span>
-                <span className="text-xs" style={{ color: "var(--c-text-2)" }}>
+                <span className="mb-1 block text-[15px] font-semibold">A family member</span>
+                <span className="block text-[13px] leading-relaxed" style={{ color: "var(--c-text-2)" }}>
                   I am booking on behalf of a parent, grandparent, or someone I care for.
                 </span>
               </span>
@@ -320,8 +351,8 @@ export function RegisterFlow() {
           <div className="mt-4 text-center">
             <button
               type="button"
-              className="text-sm"
-              style={{ color: "var(--c-text-3)" }}
+              className="cc-btn cc-btn-ghost"
+              style={{ width: "auto", fontSize: 13 }}
               disabled={pending}
               onClick={() => handleBookingFor("self")}
             >
@@ -333,13 +364,13 @@ export function RegisterFlow() {
 
       {step === "dependentSetup" && (
         <>
-          <h1 className="mb-1 text-xl font-semibold">Add a dependent profile</h1>
-          <p className="mb-2 text-sm" style={{ color: "var(--c-text-2)" }}>
-            Their details
-          </p>
-          <p className="mb-6 text-xs" style={{ color: "var(--c-text-3)" }}>
-            This name will appear when you book services on their behalf. You can add more
-            profiles from your account settings.
+          <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--c-text-3)" }}>
+            Almost done
+          </div>
+          <h1 className="mb-1 text-[24px] font-semibold tracking-tight">Add a dependent profile</h1>
+          <p className="mb-6 text-[13px] leading-relaxed" style={{ color: "var(--c-text-3)" }}>
+            This name will appear when you book services on their behalf. You can
+            add more profiles later from account settings.
           </p>
           <form onSubmit={handleDependentSubmit} className="flex flex-col gap-4">
             <div>
@@ -386,8 +417,8 @@ export function RegisterFlow() {
           <div className="mt-3 text-center">
             <button
               type="button"
-              className="text-sm"
-              style={{ color: "var(--c-text-3)" }}
+              className="cc-btn cc-btn-ghost"
+              style={{ width: "auto", fontSize: 13 }}
               disabled={pending}
               onClick={() => {
                 void guard(() => skipDependentSetup());

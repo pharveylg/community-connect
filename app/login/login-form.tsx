@@ -39,7 +39,22 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="cc-card flex flex-col gap-4">
+      <div className="mb-1 flex items-center gap-3">
+        <div
+          className="flex h-11 w-11 items-center justify-center rounded-[14px] text-xl"
+          style={{ background: "var(--c-accent-light)" }}
+        >
+          🔐
+        </div>
+        <div>
+          <div className="text-sm font-semibold">Sign in</div>
+          <div className="text-xs" style={{ color: "var(--c-text-2)" }}>
+            Welcome back to the barangay
+          </div>
+        </div>
+      </div>
+
       {error && <p className="cc-error">{error}</p>}
 
       <div>
@@ -54,9 +69,9 @@ export function LoginForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           autoComplete="email"
+          required
         />
       </div>
-
       <div>
         <label className="cc-label" htmlFor="password">
           Password
@@ -65,15 +80,16 @@ export function LoginForm() {
           id="password"
           type="password"
           className="cc-input"
-          placeholder="Password"
+          placeholder="Your password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           autoComplete="current-password"
+          required
         />
       </div>
 
       <button type="submit" className="cc-btn cc-btn-primary" disabled={pending}>
-        {pending ? "Logging in…" : "Log in"}
+        {pending ? "Signing in…" : "Sign in"}
       </button>
     </form>
   );

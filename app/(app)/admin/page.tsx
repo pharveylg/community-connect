@@ -34,15 +34,27 @@ export default async function AdminHomePage({
 
   return (
     <div className="mx-auto w-full max-w-md">
-      <p className="mb-1 text-xs" style={{ color: "var(--c-text-2)" }}>
-        Admin console · {profile.fullName}
-      </p>
-      <h1 className="mb-4 text-lg font-semibold">Operations</h1>
+      <BlurFade delay={0}>
+        <div className="mb-1 flex items-center gap-2">
+          <span className="text-xs font-medium" style={{ color: "var(--c-text-2)" }}>
+            Admin console
+          </span>
+          <span className="cc-badge" style={{ background: "#fdf3dc", color: "#8a5a00" }}>
+            {profile.fullName}
+          </span>
+        </div>
+        <h1 className="mb-5 text-[26px] font-semibold tracking-tight">Operations</h1>
+      </BlurFade>
 
       {banner && (
-        <div className="cc-card mb-4 text-xs leading-relaxed" style={{ borderColor: "var(--c-accent)" }}>
-          {banner}
-        </div>
+        <BlurFade delay={0.04}>
+          <div
+            className="cc-card mb-4 text-xs leading-relaxed"
+            style={{ boxShadow: "0 0 0 1px var(--c-accent), var(--shadow-border)" }}
+          >
+            {banner}
+          </div>
+        </BlurFade>
       )}
 
       {/* Stats */}
@@ -148,13 +160,30 @@ export default async function AdminHomePage({
           <tbody>
             {users.map((u) => (
               <tr key={u.uid} style={{ borderTop: "1px solid var(--c-border)" }}>
-                <td className="py-1.5 pr-2">
-                  <div className="font-medium">{u.fullName}</div>
+                <td className="py-2 pr-2">
+                  <div className="font-semibold">{u.fullName}</div>
                   <div style={{ color: "var(--c-text-3)" }}>{u.email}</div>
                 </td>
-                <td className="py-1.5 pr-2">{u.role ?? "—"}</td>
-                <td className="py-1.5 pr-2">{u.role === "provider" ? formatPeso(u.credits) : "—"}</td>
-                <td className="py-1.5" style={{ color: "var(--c-text-2)" }}>
+                <td className="py-2 pr-2">
+                  {u.role ? (
+                    <span
+                      className="cc-badge"
+                      style={
+                        u.role === "admin"
+                          ? { background: "#fdf3dc", color: "#8a5a00" }
+                          : u.role === "provider"
+                            ? { background: "var(--c-success-light)", color: "var(--c-success)" }
+                            : { background: "var(--c-accent-light)", color: "var(--c-accent)" }
+                      }
+                    >
+                      {u.role}
+                    </span>
+                  ) : (
+                    "—"
+                  )}
+                </td>
+                <td className="py-2 pr-2 cc-num">{u.role === "provider" ? formatPeso(u.credits) : "—"}</td>
+                <td className="py-2 cc-num" style={{ color: "var(--c-text-2)" }}>
                   {u.mobile}
                 </td>
               </tr>

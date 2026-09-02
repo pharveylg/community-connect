@@ -39,7 +39,7 @@ export default async function CreditsPage({
 
   return (
     <div className="mx-auto w-full max-w-sm">
-      <h1 className="mb-1 text-xl font-semibold">Credits</h1>
+      <h1 className="mb-1 text-[24px] font-semibold tracking-tight">Credits</h1>
       <p className="mb-5 text-sm" style={{ color: "var(--c-text-2)" }}>
         Credits pay for accepts beyond your {FREE_MONTHLY_ACCEPTS} free each month.
       </p>

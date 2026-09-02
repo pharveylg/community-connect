@@ -116,7 +116,7 @@ export function CompleteProfileFlow({
       >
 
       {step === "basic" && (
-        <form onSubmit={handleBasicSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleBasicSubmit} className="cc-card flex flex-col gap-4">
           <div>
             <label className="cc-label" htmlFor="obFullName">
               Full name
@@ -154,74 +154,98 @@ export function CompleteProfileFlow({
       )}
 
       {step === "role" && (
-        <div className="flex flex-col gap-3">
-          <button
-            type="button"
-            className="cc-role-card"
-            disabled={pending}
-            onClick={() => handleSelectRole("seeker")}
-          >
-            <span className="text-2xl">🔍</span>
-            <span>
-              <span className="mb-0.5 block font-semibold">Service seeker</span>
-              <span className="text-xs" style={{ color: "var(--c-text-2)" }}>
-                Find and book local providers — for yourself or a family member.
+        <div>
+          <div className="flex flex-col gap-3">
+            <button
+              type="button"
+              className="cc-role-card"
+              disabled={pending}
+              onClick={() => handleSelectRole("seeker")}
+            >
+              <span
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] text-2xl"
+                style={{ background: "var(--c-accent-light)" }}
+              >
+                🔍
               </span>
-            </span>
-          </button>
-          <button
-            type="button"
-            className="cc-role-card"
-            disabled={pending}
-            onClick={() => handleSelectRole("provider")}
-          >
-            <span className="text-2xl">🛠</span>
-            <span>
-              <span className="mb-0.5 block font-semibold">Service provider</span>
-              <span className="text-xs" style={{ color: "var(--c-text-2)" }}>
-                List your services, set your own rates — even services you invent,
-                like trash pickup or junk hauling.
+              <span>
+                <span className="mb-1 block text-[15px] font-semibold">Service seeker</span>
+                <span className="block text-[13px] leading-relaxed" style={{ color: "var(--c-text-2)" }}>
+                  Find and book local providers — for yourself or a family member.
+                </span>
               </span>
-            </span>
-          </button>
+            </button>
+            <button
+              type="button"
+              className="cc-role-card"
+              disabled={pending}
+              onClick={() => handleSelectRole("provider")}
+            >
+              <span
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] text-2xl"
+                style={{ background: "var(--c-success-light)" }}
+              >
+                🛠
+              </span>
+              <span>
+                <span className="mb-1 block text-[15px] font-semibold">Service provider</span>
+                <span className="block text-[13px] leading-relaxed" style={{ color: "var(--c-text-2)" }}>
+                  List your services, set your own rates — even services you invent,
+                  like trash pickup or junk hauling.
+                </span>
+              </span>
+            </button>
+          </div>
         </div>
       )}
 
       {step === "seekerOnboard" && (
-        <div className="flex flex-col gap-3">
-          <button
-            type="button"
-            className="cc-role-card"
-            disabled={pending}
-            onClick={() => handleBookingFor("self")}
-          >
-            <span className="text-2xl">🙋</span>
-            <span>
-              <span className="mb-0.5 block font-semibold">Myself</span>
-              <span className="text-xs" style={{ color: "var(--c-text-2)" }}>
-                I will personally be using the services I book.
-              </span>
-            </span>
-          </button>
-          <button
-            type="button"
-            className="cc-role-card"
-            disabled={pending}
-            onClick={() => handleBookingFor("dependent")}
-          >
-            <span className="text-2xl">👴</span>
-            <span>
-              <span className="mb-0.5 block font-semibold">A family member</span>
-              <span className="text-xs" style={{ color: "var(--c-text-2)" }}>
-                I am booking on behalf of a parent, grandparent, or someone I care for.
-              </span>
-            </span>
-          </button>
-          <div className="mt-2 text-center">
+        <div>
+          <div className="flex flex-col gap-3">
             <button
               type="button"
-              className="text-sm"
-              style={{ color: "var(--c-text-3)" }}
+              className="cc-role-card"
+              disabled={pending}
+              onClick={() => handleBookingFor("self")}
+            >
+              <span
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] text-2xl"
+                style={{ background: "var(--c-accent-light)" }}
+              >
+                🙋
+              </span>
+              <span>
+                <span className="mb-1 block text-[15px] font-semibold">Myself</span>
+                <span className="block text-[13px] leading-relaxed" style={{ color: "var(--c-text-2)" }}>
+                  I will personally be using the services I book.
+                </span>
+              </span>
+            </button>
+            <button
+              type="button"
+              className="cc-role-card"
+              disabled={pending}
+              onClick={() => handleBookingFor("dependent")}
+            >
+              <span
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] text-2xl"
+                style={{ background: "#fdf3dc" }}
+              >
+                👴
+              </span>
+              <span>
+                <span className="mb-1 block text-[15px] font-semibold">A family member</span>
+                <span className="block text-[13px] leading-relaxed" style={{ color: "var(--c-text-2)" }}>
+                  I am booking on behalf of a parent, grandparent, or someone I care for.
+                </span>
+              </span>
+            </button>
+          </div>
+          <div className="mt-4 text-center">
+            <button
+              type="button"
+              className="cc-btn cc-btn-ghost"
+              style={{ width: "auto", fontSize: 13 }}
               disabled={pending}
               onClick={() => handleBookingFor("self")}
             >
@@ -232,7 +256,7 @@ export function CompleteProfileFlow({
       )}
 
       {step === "dependentSetup" && (
-        <form onSubmit={handleDependentSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleDependentSubmit} className="cc-card flex flex-col gap-4">
           <div>
             <label className="cc-label" htmlFor="obDepName">
               Dependent&apos;s full name
@@ -273,11 +297,11 @@ export function CompleteProfileFlow({
           <button type="submit" className="cc-btn cc-btn-primary" disabled={pending}>
             {pending ? "Saving…" : "Save and finish"}
           </button>
-          <div className="text-center">
+          <div className="mt-3 text-center">
             <button
               type="button"
-              className="text-sm"
-              style={{ color: "var(--c-text-3)" }}
+              className="cc-btn cc-btn-ghost"
+              style={{ width: "auto", fontSize: 13 }}
               disabled={pending}
               onClick={() => guard(() => skipDependentSetup())}
             >

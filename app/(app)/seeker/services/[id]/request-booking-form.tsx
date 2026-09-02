@@ -39,8 +39,19 @@ export function RequestBookingForm({
 
   return (
     <form onSubmit={handleSubmit} className="cc-card flex flex-col gap-4">
-      <div className="text-sm font-semibold">
-        Request a booking <span className="font-normal text-xs" style={{ color: "var(--c-text-3)" }}>({rate})</span>
+      <div className="flex items-center gap-3">
+        <div
+          className="flex h-11 w-11 items-center justify-center rounded-[14px] text-xl"
+          style={{ background: "var(--c-accent-light)" }}
+        >
+          📅
+        </div>
+        <div>
+          <div className="text-sm font-semibold">Request a booking</div>
+          <div className="text-xs cc-num" style={{ color: "var(--c-text-2)" }}>
+            {rate} — no payment in-app
+          </div>
+        </div>
       </div>
 
       {error && <p className="cc-error">{error}</p>}
@@ -91,9 +102,6 @@ export function RequestBookingForm({
       <button type="submit" className="cc-btn cc-btn-primary" disabled={pending}>
         {pending ? "Sending…" : "Send booking request"}
       </button>
-      <div className="text-center text-xs" style={{ color: "var(--c-text-3)" }}>
-        The provider accepts or declines — no payment happens in the app.
-      </div>
     </form>
   );
 }

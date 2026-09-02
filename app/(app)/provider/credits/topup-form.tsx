@@ -11,6 +11,12 @@ import {
 } from "@/lib/catalog";
 import type { TopUpMethod } from "@/lib/catalog";
 
+const HOW_TO = [
+  "Send your payment to the platform account (GCash / Maya / BPI).",
+  "Note the payment reference number.",
+  "Submit it here — an admin confirms and credits appear in your balance.",
+];
+
 export function TopUpForm() {
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState<TopUpMethod>("gcash");
@@ -45,29 +51,47 @@ export function TopUpForm() {
 
       {error && <p className="cc-error">{error}</p>}
 
-      <div className="rounded-2xl p-3 text-xs leading-relaxed" style={{ background: "var(--c-surface-2)", color: "var(--c-text-2)" }}>
-        1. Send your payment to the platform account (GCash 09XX-XXX-XXXX /
-        Maya / BPI) · 2. Note your reference number · 3. Submit it here — an
-        admin confirms and credits appear in your balance.
+      <div className="flex flex-col gap-2.5 rounded-[16px] p-3.5" style={{ background: "var(--c-surface-2)" }}>
+        {HOW_TO.map((line, i) => (
+          <div key={i} className="flex items-start gap-2.5">
+            <span
+              className="cc-num flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10.5px] font-bold"
+              style={{ background: "var(--c-accent)", color: "#fff" }}
+            >
+              {i + 1}
+            </span>
+            <span className="text-xs leading-relaxed" style={{ color: "var(--c-text-2)" }}>
+              {line}
+            </span>
+          </div>
+        ))}
       </div>
 
       <div>
         <label className="cc-label" htmlFor="tuAmount">
           Amount ({formatPeso(MIN_TOPUP_PESOS)}–{formatPeso(MAX_TOPUP_PESOS)})
         </label>
-        <input
-          id="tuAmount"
-          type="number"
-          inputMode="numeric"
-          min={MIN_TOPUP_PESOS}
-          max={MAX_TOPUP_PESOS}
-          step={1}
-          className="cc-input"
-          placeholder="e.g. 300"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          required
-        />
+        <div className="relative">
+          <span
+            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[15px] font-semibold"
+            style={{ color: "var(--c-text-3)" }}
+          >
+            ₱
+          </span>
+          <input
+            id="tuAmount"
+            type="number"
+            inputMode="numeric"
+            min={MIN_TOPUP_PESOS}
+            max={MAX_TOPUP_PESOS}
+            step={1}
+            className="cc-input cc-num pl-8 text-[15px] font-semibold"
+            placeholder="300"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            required
+          />
+        </div>
       </div>
 
       <div>
@@ -77,12 +101,7 @@ export function TopUpForm() {
             <button
               key={m}
               type="button"
-              className="cc-chip"
-              style={
-                method === m
-                  ? { background: "var(--c-accent)", color: "#fff", borderColor: "var(--c-accent)" }
-                  : undefined
-              }
+              className={`cc-chip ${method === m ? "cc-chip-active" : ""}`}
               onClick={() => setMethod(m)}
             >
               {TOPUP_METHOD_LABELS[m]}
