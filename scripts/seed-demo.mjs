@@ -38,7 +38,8 @@ const period = new Intl.DateTimeFormat("en-CA", {
 async function upsertAuthUser(email, displayName) {
   try {
     const existing = await auth.getUserByEmail(email);
-    await auth.updateUser(existing.uid, { password: PASSWORD, displayName });
+    // NB: never touch the password of an existing user — a password update
+    // revokes their active sessions and kicks them out of the app.
     return existing.uid;
   } catch {
     const created = await auth.createUser({ email, password: PASSWORD, displayName });

@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getProfile } from "@/lib/firestore";
-import { verifySession } from "@/lib/dal";
+import { getSessionUid } from "@/lib/dal";
 import { roleHomePath } from "@/lib/roles";
 import { SERVICE_CATEGORIES } from "@/lib/catalog";
 import { BlurFade } from "@/components/mp/blur-fade";
@@ -29,8 +28,10 @@ const STEPS = [
 ];
 
 export default async function Home() {
-  if ((await cookies()).has("session")) {
-    const { uid } = await verifySession();
+  // Soft check: an invalid/stale cookie just renders the landing page —
+  // never a redirect (loops are impossible by construction).
+  const uid = await getSessionUid();
+  if (uid) {
     const profile = await getProfile(uid);
     if (!profile) redirect("/onboarding");
     if (!profile.role) redirect("/onboarding?step=role");

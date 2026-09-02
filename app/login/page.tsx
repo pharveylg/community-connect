@@ -1,8 +1,20 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { LoginForm } from "./login-form";
 import { BlurFade } from "@/components/mp/blur-fade";
+import { getSessionUid } from "@/lib/dal";
+import { getProfile } from "@/lib/firestore";
+import { roleHomePath } from "@/lib/roles";
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  // Only a VALID session is redirected home; a stale cookie must be able
+  // to see and use the login form (it gets replaced on sign-in).
+  const uid = await getSessionUid();
+  if (uid) {
+    const profile = await getProfile(uid);
+    if (profile?.role) redirect(roleHomePath(profile.role));
+    redirect("/onboarding");
+  }
   return (
     <div className="flex flex-1 items-center justify-center px-4 py-16">
       <div className="w-full max-w-sm">

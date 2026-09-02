@@ -5,6 +5,23 @@ import { getAdminAuth } from "@/lib/firebase/admin";
 import { getProfile, type Profile } from "@/lib/firestore";
 import { readSessionCookie } from "@/lib/session";
 
+/**
+ * Soft session check: returns the uid when the session cookie is VALID,
+ * null when absent or invalid (expired/revoked). Never redirects — use on
+ * public pages (landing, login, register) so a stale cookie can never
+ * bounce a user into a redirect loop.
+ */
+export const getSessionUid = cache(async (): Promise<string | null> => {
+  const sessionCookie = await readSessionCookie();
+  if (!sessionCookie) return null;
+  try {
+    const decoded = await getAdminAuth().verifySessionCookie(sessionCookie, true);
+    return decoded.uid;
+  } catch {
+    return null;
+  }
+});
+
 export const verifySession = cache(async (): Promise<{ uid: string }> => {
   const sessionCookie = await readSessionCookie();
   if (!sessionCookie) redirect("/login");
