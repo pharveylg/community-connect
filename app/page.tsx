@@ -16,6 +16,7 @@ import { BlurFade } from "@/components/mp/blur-fade";
 import { DotPattern } from "@/components/mp/dot-pattern";
 import { Marquee } from "@/components/mp/marquee";
 import { InstallButton } from "./install-button";
+import { PostRequestCta } from "@/components/post-request-cta";
 
 const STEPS = [
   {
@@ -262,6 +263,11 @@ export default async function Home({
             );
           })}
         </div>
+
+        {/* Didn't find what they need? Let them post a request (anon → sign-up/log-in prompt). */}
+        <BlurFade delay={0.34} inView>
+          <PostRequestCta />
+        </BlurFade>
 
         <BlurFade delay={0.34} inView>
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--c-text-3)" }}>
