@@ -3,16 +3,6 @@ import { logout } from "@/app/actions/auth";
 import { countUnread } from "@/lib/notifications";
 import Link from "next/link";
 
-function initials(name: string) {
-  return name
-    .trim()
-    .split(/\s+/)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-}
-
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const profile = await getCurrentProfile();
   const unread = await countUnread(profile.uid);
@@ -37,7 +27,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           )}
         </Link>
         <div
-          className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold"
+          className="flex h-9 max-w-[10rem] items-center justify-center truncate rounded-full px-3.5 text-[13px] font-bold"
           style={{
             background: "var(--c-accent-light)",
             color: "var(--c-accent)",
@@ -45,7 +35,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           }}
           title={profile.email}
         >
-          {initials(profile.fullName || profile.email)}
+          {profile.fullName || profile.email}
         </div>
         <form action={logout}>
           <button
