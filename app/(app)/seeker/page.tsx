@@ -18,6 +18,7 @@ import {
   vouchForProviderAction,
 } from "@/app/actions/bookings";
 import { listMyJobPosts, listPostOffers } from "@/lib/jobboard";
+import { listOpenAds } from "@/lib/trabaho";
 import { BlurFade } from "@/components/mp/blur-fade";
 
 const STATUS_STYLES: Record<Booking["status"], { bg: string; fg: string; label: string }> = {
@@ -57,6 +58,7 @@ export default async function SeekerHomePage({
     listSeekerBookings(profile.uid),
     listMyJobPosts(profile.uid),
   ]);
+  const trabahoAds = await listOpenAds();
   const openPosts = jobPosts.filter((p) => p.status === "open");
   const openOfferCount = (
     await Promise.all(openPosts.map((p) => listPostOffers(p.id)))
@@ -95,6 +97,20 @@ export default async function SeekerHomePage({
               {openPosts.length > 0
                 ? `${openPosts.length} open · ${openOfferCount} offer${openOfferCount === 1 ? "" : "s"} from verified providers`
                 : "Can't find it in browse? Describe the job — verified providers send offers."}
+            </p>
+          </div>
+          <span className="text-lg">→</span>
+        </Link>
+      </BlurFade>
+
+      <BlurFade delay={0.05}>
+        <Link href="/trabaho" className="cc-card-interactive mb-5 flex items-center justify-between gap-3">
+          <div>
+            <div className="text-sm font-semibold">💼 Trabaho — local hiring</div>
+            <p className="mt-0.5 text-xs leading-relaxed" style={{ color: "var(--c-text-2)" }}>
+              {trabahoAds.length > 0
+                ? `${trabahoAds.length} open job${trabahoAds.length === 1 ? "" : "s"} — yaya, helpers, store staff. Workers never pay.`
+                : "Households & shops hiring soon — or post a job yourself (needs free ID verification)."}
             </p>
           </div>
           <span className="text-lg">→</span>

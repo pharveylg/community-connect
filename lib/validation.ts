@@ -2,6 +2,7 @@ import * as z from "zod";
 import {
   ALL_CATEGORY_SLUGS,
   CATEGORY_SLUGS,
+  WORK_CATEGORY_SLUGS,
   LEAD_TIMES,
   RATE_TYPES,
   TOPUP_METHODS,
@@ -149,3 +150,40 @@ export const JobOfferSchema = z.object({
   message: z.string().trim().max(300, "Keep your message under 300 characters.").optional().default(""),
 });
 export type JobOfferInput = z.infer<typeof JobOfferSchema>;
+
+// --- Trabaho (job ads) --------------------------------------------------------
+
+export const JobAdSchema = z.object({
+  posterType: z.enum(["household", "business"], "Who's hiring?"),
+  title: z.string().trim().min(4, "Give the job a short title (e.g. Yaya for 2 kids).").max(80),
+  description: z.string().trim().max(400, "Keep details under 400 characters.").optional().default(""),
+  categorySlug: z.enum(WORK_CATEGORY_SLUGS, "Please choose a work category."),
+  employmentType: z.enum(["full_time", "part_time", "contract"], "Choose the employment type."),
+  schedule: z.string().trim().max(120, "Keep schedule notes under 120 characters.").optional().default(""),
+  salaryMin: z.coerce
+    .number({ error: "Salary must be a number." })
+    .int("Whole pesos only.")
+    .min(1, "Salary must be at least ₱1.")
+    .max(1_000_000)
+    .nullable()
+    .optional()
+    .default(null),
+  salaryMax: z.coerce
+    .number({ error: "Salary must be a number." })
+    .int("Whole pesos only.")
+    .min(1)
+    .max(1_000_000)
+    .nullable()
+    .optional()
+    .default(null),
+  salaryPeriod: z.enum(["day", "week", "month"]).nullable().optional().default(null),
+  barangay: z.string().trim().min(2, "Please enter your barangay.").max(60),
+  city: z.string().trim().min(2, "Please enter your city.").max(60),
+  kasambahayAck: z.boolean().optional().default(false),
+});
+export type JobAdInput = z.infer<typeof JobAdSchema>;
+
+export const JobAdInterestSchema = z.object({
+  message: z.string().trim().max(300, "Keep your message under 300 characters.").optional().default(""),
+});
+export type JobAdInterestInput = z.infer<typeof JobAdInterestSchema>;

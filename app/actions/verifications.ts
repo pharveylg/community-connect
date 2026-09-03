@@ -25,8 +25,10 @@ export async function submitVerificationAction(
   }
 
   const profile = await getCurrentProfile();
-  if (profile.role !== "provider") {
-    return { error: "Only providers can request ID verification." };
+  // Verification is open to EVERY role (providers earn the ✅ badge; any
+  // verified account may post Trabaho job ads). Admins don't need it.
+  if (profile.role === "admin") {
+    return { error: "Admins don't need ID verification." };
   }
 
   const mobile = normalizePhMobile(parsed.data.mobile)!;
@@ -40,6 +42,7 @@ export async function submitVerificationAction(
   const result = await createVerificationRequest({
     uid: profile.uid,
     requesterName: profile.fullName,
+    role: profile.role ?? undefined,
     legalName: parsed.data.legalName,
     idType: parsed.data.idType,
     idNumber: parsed.data.idNumber,
@@ -50,8 +53,10 @@ export async function submitVerificationAction(
   if ("error" in result && result.error) return { error: result.error };
 
   revalidatePath("/provider");
+  revalidatePath("/seeker");
+  revalidatePath("/verification");
   revalidatePath("/admin");
-  redirect("/provider/verification?submitted=1");
+  redirect("/verification?submitted=1");
 }
 
 export async function decideVerificationAction(formData: FormData) {

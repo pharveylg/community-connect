@@ -9,6 +9,7 @@ import {
   formatRate,
 } from "@/lib/catalog";
 import { browseServices, getProviderTrust } from "@/lib/firestore";
+import { listOpenAds, salaryLine } from "@/lib/trabaho";
 import { trustBadgeStyle, trustTier, trustSummaryLine } from "@/lib/trust";
 import { effectiveVerification } from "@/lib/verifications";
 import { BlurFade } from "@/components/mp/blur-fade";
@@ -65,6 +66,7 @@ export default async function Home({
         );
       })
     : services;
+  const jobAds = (await listOpenAds()).slice(0, 3);
 
   return (
     <div className="relative flex flex-1 flex-col overflow-hidden">
@@ -150,6 +152,38 @@ export default async function Home({
                 <span className="text-sm leading-none">{cat.emoji}</span> {cat.label}
               </Link>
             ))}
+          </div>
+        </BlurFade>
+
+        {/* Trabaho strip */}
+        <BlurFade delay={0.3} inView>
+          <div className="cc-card mb-10">
+            <div className="mb-1 flex items-center justify-between gap-2">
+              <div className="text-sm font-semibold">💼 Trabaho — local hiring</div>
+              <Link href="/trabaho" className="text-xs font-semibold" style={{ color: "var(--c-accent)" }}>
+                See all →
+              </Link>
+            </div>
+            {jobAds.length === 0 ? (
+              <p className="mb-2 text-xs leading-relaxed" style={{ color: "var(--c-text-2)" }}>
+                Households &amp; small shops hiring locally — yaya, store helpers,
+                and more. Workers never pay to apply.
+              </p>
+            ) : (
+              <div className="mb-2.5 flex flex-col gap-2">
+                {jobAds.map((ad) => (
+                  <Link key={ad.id} href={`/trabaho/${ad.id}`} className="flex items-baseline justify-between gap-2 rounded-[10px] px-2.5 py-2" style={{ background: "var(--c-surface)", boxShadow: "var(--shadow-border)" }}>
+                    <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{ad.title}</span>
+                    <span className="shrink-0 text-[11px] cc-num" style={{ color: "var(--c-text-3)" }}>
+                      {salaryLine(ad) ?? "📍 " + ad.barangay}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            )}
+            <Link href="/trabaho/post" className="text-xs font-semibold" style={{ color: "var(--c-accent)" }}>
+              Hiring? Post a job — free (ID-verified posters) →
+            </Link>
           </div>
         </BlurFade>
 
@@ -248,8 +282,7 @@ export default async function Home({
       <BlurFade delay={0.44} inView className="relative">
         <p className="mt-3 px-5 text-center text-xs" style={{ color: "var(--c-text-3)" }}>
           Soon: 🛠 licensed pros — electricians, plumbers, aircon techs, certified caregivers —
-          every credential verified. Soon: 💼 Trabaho — households &amp; small shops hiring
-          locally, posted by ID-verified accounts.
+          every credential verified.
         </p>
       </BlurFade>
 

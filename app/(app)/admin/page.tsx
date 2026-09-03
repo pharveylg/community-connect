@@ -289,7 +289,14 @@ function VerificationReviewCard({
 }) {
   return (
     <div>
-      <div className="mb-1 text-[15px] font-semibold">{v.requesterName}</div>
+      <div className="mb-1 flex flex-wrap items-center gap-2">
+        <span className="text-[15px] font-semibold">{v.requesterName}</span>
+        {v.role && (
+          <span className="cc-badge" style={{ background: "var(--c-accent-light)", color: "var(--c-accent)" }}>
+            {v.role}
+          </span>
+        )}
+      </div>
       <div className="mb-2.5 text-xs leading-relaxed" style={{ color: "var(--c-text-2)" }}>
         {v.legalName} · {VERIFICATION_ID_LABELS[v.idType as VerificationIdType]} (••••{" "}
         {v.idNumberLast4}) · {v.mobile}

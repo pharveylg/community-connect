@@ -13,6 +13,7 @@ export type VerificationRequest = {
   id: string;
   uid: string;
   requesterName: string;
+  role?: string;
   legalName: string;
   idType: VerificationIdType;
   idNumberLast4: string;
@@ -41,6 +42,7 @@ function fromSnap(id: string, data: FirebaseFirestore.DocumentData): Verificatio
     id,
     uid: data.uid,
     requesterName: data.requesterName ?? "",
+    role: data.role ?? undefined,
     legalName: data.legalName ?? "",
     idType: data.idType,
     idNumberLast4: data.idNumberLast4 ?? "",
@@ -85,6 +87,7 @@ export const VERIFICATION_REJECT_COOLDOWN_DAYS = 7;
 export async function createVerificationRequest(input: {
   uid: string;
   requesterName: string;
+  role?: string;
   legalName: string;
   idType: VerificationIdType;
   idNumber: string;
@@ -121,6 +124,7 @@ export async function createVerificationRequest(input: {
   batch.set(reqRef, {
     uid: input.uid,
     requesterName: input.requesterName,
+    role: input.role ?? null,
     legalName: input.legalName,
     idType: input.idType,
     idNumber: input.idNumber,

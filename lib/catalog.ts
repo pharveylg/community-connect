@@ -21,6 +21,16 @@ export type ProCategorySlug =
   | "bookkeeping"
   | "licensed-care";
 
+export type WorkCategorySlug =
+  | "kasambahay-yaya"
+  | "househelp"
+  | "store-vendor"
+  | "food-service"
+  | "delivery-driving"
+  | "construction-labor"
+  | "office-admin"
+  | "other-work";
+
 export type CategorySlug =
   | "transport"
   | "handyman"
@@ -30,7 +40,8 @@ export type CategorySlug =
   | "care-home"
   | "events"
   | "other"
-  | ProCategorySlug;
+  | ProCategorySlug
+  | WorkCategorySlug;
 
 export type Category = {
   slug: CategorySlug;
@@ -100,6 +111,28 @@ export function getCategory(slug: string): Category | undefined {
     SERVICE_CATEGORIES.find((c) => c.slug === slug) ??
     PRO_SERVICE_CATEGORIES.find((c) => c.slug === slug)
   );
+}
+
+// --- Trabaho (job ads) — work categories for the employment classifieds ------
+
+export const WORK_CATEGORIES: Category[] = [
+  { slug: "kasambahay-yaya", label: "Kasambahay / Yaya", emoji: "👶", blurb: "Household help, childcare, elder care" },
+  { slug: "househelp", label: "General Househelp", emoji: "🏠", blurb: "Cleaning, cooking, laundry help" },
+  { slug: "store-vendor", label: "Store & Vendor", emoji: "🏪", blurb: "Sari-sari, hardware, mall stalls" },
+  { slug: "food-service", label: "Food Service", emoji: "🍳", blurb: "Carenderia, kitchen, food prep" },
+  { slug: "delivery-driving", label: "Delivery & Driving", emoji: "🛵", blurb: "Habal, delivery, driving jobs" },
+  { slug: "construction-labor", label: "Construction & Labor", emoji: "🧱", blurb: "Carpentry helper, painting, labor" },
+  { slug: "office-admin", label: "Office & Admin", emoji: "🗂️", blurb: "Encoder, reception, admin help" },
+  { slug: "other-work", label: "Other Work", emoji: "💼", blurb: "Anything else that's a job" },
+];
+
+export const WORK_CATEGORY_SLUGS = WORK_CATEGORIES.map((c) => c.slug) as [
+  CategorySlug,
+  ...CategorySlug[],
+];
+
+export function getWorkCategory(slug: string): Category | undefined {
+  return WORK_CATEGORIES.find((c) => c.slug === slug);
 }
 
 // --- Professional tier (Phase A: placeholder, locked for listings) ----------

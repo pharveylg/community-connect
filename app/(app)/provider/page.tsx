@@ -7,6 +7,7 @@ import { allowanceFor } from "@/lib/wallet";
 import { nextTrustTier, trustBadgeStyle, trustTier, trustSummaryLine } from "@/lib/trust";
 import { effectiveVerification } from "@/lib/verifications";
 import { listOpenJobPosts } from "@/lib/jobboard";
+import { listOpenAds } from "@/lib/trabaho";
 import { acceptBookingAction, declineBookingAction } from "@/app/actions/bookings";
 import { toggleServiceActiveAction } from "@/app/actions/services";
 import {
@@ -37,10 +38,11 @@ export default async function ProviderHomePage({
         ? params.error
         : null;
 
-  const [services, bookings, jobPosts] = await Promise.all([
+  const [services, bookings, jobPosts, jobAds] = await Promise.all([
     getProviderServices(profile.uid),
     listProviderBookings(profile.uid),
     listOpenJobPosts(),
+    listOpenAds(),
   ]);
   const allowance = allowanceFor(profile);
   const pending = bookings.filter((b) => b.status === "pending");
@@ -112,7 +114,7 @@ export default async function ProviderHomePage({
         <Link href="/provider/jobs" className="cc-card-interactive mb-4 flex items-center justify-between gap-3">
           <div className="min-w-0">
             <div className="text-sm font-semibold">
-              🎯 Open jobs near you
+              🎯 Open service requests
               {jobPosts.length > 0 && (
                 <span className="cc-num ml-1.5 font-normal" style={{ color: "var(--c-accent)" }}>
                   ({jobPosts.length})
@@ -123,6 +125,28 @@ export default async function ProviderHomePage({
               {jobPosts.length > 0
                 ? jobPosts[0].title
                 : "No open requests right now — check back soon"}
+            </p>
+          </div>
+          <span className="text-lg">→</span>
+        </Link>
+      </BlurFade>
+
+      {/* Trabaho work card */}
+      <BlurFade delay={0.09}>
+        <Link href="/trabaho" className="cc-card-interactive mb-4 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="text-sm font-semibold">
+              💼 Looking for steady work?
+              {jobAds.length > 0 && (
+                <span className="cc-num ml-1.5 font-normal" style={{ color: "var(--c-accent)" }}>
+                  ({jobAds.length})
+                </span>
+              )}
+            </div>
+            <p className="mt-0.5 truncate text-xs leading-relaxed" style={{ color: "var(--c-text-2)" }}>
+              {jobAds.length > 0
+                ? jobAds[0].title
+                : "Local jobs: yaya, helper, store staff — applying is always free"}
             </p>
           </div>
           <span className="text-lg">→</span>
@@ -154,7 +178,7 @@ export default async function ProviderHomePage({
                 </p>
               </div>
               <Link
-                href="/provider/verification"
+                href="/verification"
                 className="cc-btn cc-btn-secondary"
                 style={{ width: "auto", minHeight: 38, fontSize: 12.5, padding: "0 14px", flexShrink: 0 }}
               >

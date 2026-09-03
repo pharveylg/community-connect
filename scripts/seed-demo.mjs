@@ -63,6 +63,9 @@ async function cleanOnly() {
   await clearSeeds("verifications");
   await clearSeeds("job_posts");
   await clearSeeds("job_offers");
+  await clearSeeds("job_ads");
+  await clearSeeds("job_ad_interests");
+  await clearSeeds("job_ad_reports");
   await clearSeeds("verification_id_hashes");
   await clearSeeds("audit_log");
   const seedProfiles = await db.collection("profiles").where("seed", "==", true).get();
@@ -307,6 +310,36 @@ async function main() {
     message: "My cousin and I do aircon cleaning — includes wash and check. Saturday morning works.",
     status: "pending",
     seed: true,
+    createdAt: FieldValue.serverTimestamp(),
+  });
+
+  // Trabaho: Jun (verified) hires for his aircon business; Ramon is interested.
+  const seedAd = await db.collection("job_ads").add({
+    posterUid: uids.p3,
+    posterName: people[3].name,
+    posterType: "business",
+    title: "Aircon service helper — learn the trade",
+    description: "Ride along on cleaning jobs around CDO, carry tools, learn diagnostics. Can grow into a technician slot.",
+    categorySlug: "construction-labor",
+    employmentType: "part_time",
+    schedule: "Mon–Sat, 3–4 days/week",
+    salaryMin: 400,
+    salaryMax: 500,
+    salaryPeriod: "day",
+    barangay: "Barangay 28",
+    city: "Cagayan de Oro City",
+    status: "open",
+    createdAt: FieldValue.serverTimestamp(),
+  });
+  await db.collection("job_ad_interests").doc(`${seedAd.id}__${uids.p1}`).set({
+    adId: seedAd.id,
+    workerUid: uids.p1,
+    workerName: people[1].name,
+    message: "I'm handy with tools and available weekends — can I start Saturday?",
+    status: "interested",
+    posterMobile: null,
+    workerMobile: null,
+    shortlistedAt: null,
     createdAt: FieldValue.serverTimestamp(),
   });
 
