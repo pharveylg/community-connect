@@ -2,6 +2,8 @@ import Link from "next/link";
 import { getCurrentProfile } from "@/lib/dal";
 import { listMyNotifications, countUnread } from "@/lib/notifications";
 import { markNotificationsReadAction } from "@/app/actions/notifications";
+import { updatePushPrefsFormAction } from "@/app/actions/push";
+import { PushOptIn } from "@/components/push-opt-in";
 import { BackLink } from "@/components/back-link";
 import { BlurFade } from "@/components/mp/blur-fade";
 
@@ -51,6 +53,40 @@ export default async function NotificationsPage() {
               </button>
             </form>
           )}
+        </div>
+      </BlurFade>
+
+      <PushOptIn context="seeker" />
+
+      <BlurFade delay={0.04}>
+        <div className="cc-card mb-4">
+          <div className="mb-2 text-sm font-semibold">Notification settings</div>
+          <form action={updatePushPrefsFormAction} className="flex flex-col gap-2">
+            {[
+              { name: "bookingOffers", label: "Bookings & offers", hint: "booking requests, accepted bookings, job-board offers" },
+              { name: "jobTrabaho", label: "Job board & Trabaho", hint: "applicants, shortlists, offers" },
+              { name: "accountModeration", label: "Account & moderation", hint: "verification decisions, top-ups, moderation outcomes" },
+              { name: "digest", label: "📬 Daily digest", hint: "one morning summary of new posts (opt-in)" },
+            ].map((row) => (
+              <label key={row.name} className="flex items-start gap-2.5 rounded-[10px] px-2.5 py-2" style={{ background: "var(--c-surface)", boxShadow: "var(--shadow-border)" }}>
+                <input
+                  type="checkbox"
+                  name={row.name}
+                  defaultChecked={row.name === "digest" ? profile.notificationPrefs?.digest === true : profile.notificationPrefs?.[row.name as "bookingOffers"] !== false}
+                  className="mt-0.5"
+                />
+                <span>
+                  <span className="block text-[13px] font-semibold">{row.label}</span>
+                  <span className="block text-[11px]" style={{ color: "var(--c-text-3)" }}>
+                    {row.hint}
+                  </span>
+                </span>
+              </label>
+            ))}
+            <button type="submit" className="cc-btn cc-btn-primary" style={{ minHeight: 38 }}>
+              Save settings
+            </button>
+          </form>
         </div>
       </BlurFade>
 

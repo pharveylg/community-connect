@@ -5,10 +5,12 @@ import { revalidatePath } from "next/cache";
 import { getCurrentProfile } from "@/lib/dal";
 import { getProfile } from "@/lib/firestore";
 import {
+  listPendingVerifications,
   createVerificationRequest,
   decideVerification,
   type VerificationFile,
 } from "@/lib/verifications";
+import { notify } from "@/lib/push";
 import { VerificationSchema, normalizePhMobile } from "@/lib/validation";
 import type { VerificationInput } from "@/lib/validation";
 
@@ -69,12 +71,26 @@ export async function decideVerificationAction(formData: FormData) {
   if (caller?.role !== "admin") return;
   if (decision !== "approved" && decision !== "rejected") return;
 
+  const v = (await listPendingVerifications()).find((x: { id: string }) => x.id === requestId);
   const result = await decideVerification({
     adminUid: uid,
     requestId,
     decision,
     reason: reason || undefined,
   });
+  if (v && !("error" in result)) {
+    await notify({
+      uid: v.uid,
+      type: decision === "approved" ? "verification_approved" : "verification_rejected",
+      category: "accountModeration",
+      title: decision === "approved" ? "You're ID Verified ✅" : "Verification not approved",
+      body:
+        decision === "approved"
+          ? "Your ✅ badge is live for a year — it shows everywhere your name appears."
+          : `Reason: ${reason || "documents didn't match our checks"}. You can reapply after 7 days.`,
+      link: decision === "approved" ? "/verification" : "/verification",
+    });
+  }
   revalidatePath("/admin");
   revalidatePath("/provider");
   if ("error" in result && result.error) {

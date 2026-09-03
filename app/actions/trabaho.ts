@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCurrentProfile } from "@/lib/dal";
 import { getProfile } from "@/lib/firestore";
+import { notify } from "@/lib/push";
 import { effectiveVerification } from "@/lib/verifications";
 import { JobAdSchema, JobAdInterestSchema } from "@/lib/validation";
 import { guardContent } from "@/lib/content-guard";
@@ -116,6 +117,16 @@ export async function expressInterestAction(adId: string, input: unknown) {
   );
   if ("error" in result && result.error) return { error: result.error };
 
+  await notify({
+    uid: ad.posterUid,
+    type: "job_ad_applicant",
+    category: "jobTrabaho",
+    urgent: true,
+    title: `New applicant: ${profile.fullName.split(" ")[0]}`,
+    body: `applied for “${ad.title}” — check their profile and shortlist.`,
+    link: "/trabaho/my",
+  });
+
   revalidatePath(`/trabaho/${adId}`);
   revalidatePath("/trabaho/my");
   redirect(`/trabaho/${adId}?interested=1`);
@@ -150,6 +161,17 @@ export async function decideInterestAction(formData: FormData) {
   });
   if ("error" in result && result.error) {
     redirect(`/trabaho/my?error=${encodeURIComponent(result.error)}`);
+  }
+  if (decision === "shortlisted") {
+    await notify({
+      uid: workerUid,
+      type: "job_ad_shortlisted",
+      category: "jobTrabaho",
+      urgent: true,
+      title: "You were shortlisted 🎉",
+      body: `${profile.fullName.split(" ")[0]} shortlisted you — your mobile numbers are now shared. Contact them to finalize.`,
+      link: `/trabaho/${adId}`,
+    });
   }
   revalidatePath("/trabaho/my");
   redirect(`/trabaho/my?${decision}=1`);

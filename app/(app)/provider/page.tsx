@@ -6,6 +6,7 @@ import { listProviderBookings } from "@/lib/bookings";
 import { allowanceFor } from "@/lib/wallet";
 import { nextTrustTier, trustBadgeStyle, trustTier, trustSummaryLine } from "@/lib/trust";
 import { effectiveVerification } from "@/lib/verifications";
+import { PushOptIn } from "@/components/push-opt-in";
 import { listOpenJobPosts } from "@/lib/jobboard";
 import { listOpenAds } from "@/lib/trabaho";
 import { acceptBookingAction, declineBookingAction } from "@/app/actions/bookings";
@@ -108,6 +109,8 @@ export default async function ProviderHomePage({
           </div>
         </Link>
       </BlurFade>
+
+      <PushOptIn context="provider" />
 
       {/* Job board preview */}
       <BlurFade delay={0.075}>

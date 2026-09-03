@@ -12,6 +12,9 @@ import {
   vouchForProvider,
 } from "@/lib/bookings";
 import { BookingRequestSchema } from "@/lib/validation";
+import { getServiceListing } from "@/lib/firestore";
+import { getBookingById } from "@/lib/bookings";
+import { notify } from "@/lib/push";
 import { guardContent } from "@/lib/content-guard";
 import type { BookingRequestInput } from "@/lib/validation";
 
@@ -44,6 +47,19 @@ export async function createBookingAction(
   );
   if ("error" in result && result.error) return { error: result.error };
 
+  const svc = await getServiceListing(serviceId);
+  if (svc) {
+    await notify({
+      uid: svc.providerUid,
+      type: "booking_request",
+      category: "bookingOffers",
+      urgent: true,
+      title: "New booking request",
+      body: `${profile.fullName.split(" ")[0]} requested “${svc.title}” — accept or decline it.`,
+      link: "/provider",
+    });
+  }
+
   revalidatePath("/seeker");
   revalidatePath("/provider");
   redirect("/seeker?booked=1");
@@ -58,6 +74,18 @@ export async function acceptBookingAction(formData: FormData) {
   revalidatePath("/provider");
   revalidatePath("/seeker");
   if ("error" in result && result.error) redirect(`/provider?error=${encodeURIComponent(result.error)}`);
+  const booking = await getBookingById(bookingId);
+  if (booking) {
+    await notify({
+      uid: booking.seekerUid,
+      type: "booking_accepted",
+      category: "bookingOffers",
+      urgent: true,
+      title: "Booking accepted ✅",
+      body: `Your provider confirmed “${booking.serviceTitle}”. Payment is arranged directly with them.`,
+      link: "/seeker",
+    });
+  }
   redirect("/provider?accepted=1");
 }
 
@@ -92,6 +120,17 @@ export async function completeBookingAction(formData: FormData) {
   revalidatePath("/seeker");
   revalidatePath("/provider");
   if ("error" in result && result.error) redirect(`/seeker?error=${encodeURIComponent(result.error)}`);
+  const booking = await getBookingById(bookingId);
+  if (booking) {
+    await notify({
+      uid: booking.providerUid,
+      type: "booking_completed",
+      category: "bookingOffers",
+      title: "Job marked complete ✓",
+      body: `${profile.fullName.split(" ")[0]} marked “${booking.serviceTitle}” as done. Thanks!`,
+      link: "/provider",
+    });
+  }
   redirect("/seeker?done=1");
 }
 

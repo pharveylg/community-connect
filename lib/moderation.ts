@@ -1,7 +1,7 @@
 import "server-only";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase/admin";
-import { createNotification } from "@/lib/notifications";
+import { notify } from "@/lib/push";
 
 // Moderation engine: user reports + tripwire auto-hide + flagged-content
 // listing for the admin queue. Content rules live in lib/content-guard.ts;
@@ -81,9 +81,10 @@ export async function notifyOwner(
     const label = TARGET_LABELS[targetType];
     const title = String(d.title ?? d.providerName ?? d.workerName ?? label);
     if (cause === "restored") {
-      await createNotification({
+      await notify({
         uid,
         type: "moderation_restored",
+        category: "accountModeration",
         title: `Your ${label} was restored`,
         body: `“${title}” passed review and is visible again. Sorry for the interruption!`,
         link: ownerLink(targetType),
@@ -91,18 +92,20 @@ export async function notifyOwner(
       return;
     }
     if (cause === "reports") {
-      await createNotification({
+      await notify({
         uid,
         type: "moderation_review",
+        category: "accountModeration",
         title: `Your ${label} is under review`,
         body: `“${title}” was hidden after multiple reports. Our team will review it — if it was a mistake, it will be restored.`,
         link: ownerLink(targetType),
       });
       return;
     }
-    await createNotification({
+    await notify({
       uid,
       type: "moderation_removed",
+      category: "accountModeration",
       title: `Your ${label} was removed`,
       body: `“${title}” was removed by moderators for breaking our rules (scams, illegal content, or unsafe posts). Repeated violations can lead to account suspension.`,
       link: ownerLink(targetType),

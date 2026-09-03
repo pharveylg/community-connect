@@ -3,7 +3,8 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getCurrentProfile } from "@/lib/dal";
-import { createTopUpRequest, decideTopUp } from "@/lib/wallet";
+import { createTopUpRequest, decideTopUp, listPendingTopUps } from "@/lib/wallet";
+import { notify } from "@/lib/push";
 import { getProfile } from "@/lib/firestore";
 import { TopUpRequestSchema } from "@/lib/validation";
 import type { TopUpRequestInput } from "@/lib/validation";
@@ -39,9 +40,23 @@ export async function decideTopUpAction(formData: FormData) {
 
   if (decision !== "approved" && decision !== "rejected") return;
 
+  const t = (await listPendingTopUps()).find((x) => x.id === requestId);
   const result = await decideTopUp(uid, requestId, decision, note || undefined);
   revalidatePath("/admin");
   revalidatePath("/provider/credits");
   if ("error" in result && result.error) redirect(`/admin?error=${encodeURIComponent(result.error)}`);
+  if (t) {
+    await notify({
+      uid: t.uid,
+      type: decision === "approved" ? "topup_approved" : "topup_rejected",
+      category: "accountModeration",
+      title: decision === "approved" ? "Top-up approved ✅" : "Top-up not approved",
+      body:
+        decision === "approved"
+          ? `₱${t.amount.toLocaleString("en-PH")} in credits was added to your wallet.`
+          : `Your ₱${t.amount.toLocaleString("en-PH")} top-up was not approved${note ? ` — ${note}` : ""}. Contact support if you think this is wrong.`,
+      link: "/provider/credits",
+    });
+  }
   redirect(`/admin?decided=${decision}&tab=topups`);
 }

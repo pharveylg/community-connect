@@ -20,6 +20,7 @@ import {
 import { listMyJobPosts, listPostOffers } from "@/lib/jobboard";
 import { listOpenAds } from "@/lib/trabaho";
 import { BlurFade } from "@/components/mp/blur-fade";
+import { PushOptIn } from "@/components/push-opt-in";
 
 const STATUS_STYLES: Record<Booking["status"], { bg: string; fg: string; label: string }> = {
   pending: { bg: "#fdf3dc", fg: "#8a5a00", label: "Waiting for provider" },
@@ -102,6 +103,8 @@ export default async function SeekerHomePage({
           <span className="text-lg">→</span>
         </Link>
       </BlurFade>
+
+      <PushOptIn context="seeker" />
 
       <BlurFade delay={0.05}>
         <Link href="/trabaho" className="cc-card-interactive mb-5 flex items-center justify-between gap-3">

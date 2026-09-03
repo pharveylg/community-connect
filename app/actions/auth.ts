@@ -87,6 +87,13 @@ export async function login(idToken: string, next?: string) {
 }
 
 export async function logout() {
+  try {
+    const { uid } = await verifySession();
+    const { clearPushTokens } = await import("@/lib/push");
+    await clearPushTokens(uid);
+  } catch {
+    // best-effort — proceed with logout regardless
+  }
   await deleteSession();
   redirect("/login");
 }

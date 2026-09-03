@@ -366,3 +366,8 @@ export async function getVouchedProviderUids(
     .get();
   return new Set(snap.docs.map((d) => d.id.split("__")[1]));
 }
+
+export async function getBookingById(id: string): Promise<Booking | null> {
+  const snap = await getAdminDb().collection("bookings").doc(id).get();
+  return snap.exists ? bookingFromSnap(id, snap.data() ?? {}) : null;
+}

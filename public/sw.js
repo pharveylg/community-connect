@@ -10,7 +10,7 @@
  *   intercepted. Forms already show proper errors when the network fails.
  */
 
-const VERSION = "v1";
+const VERSION = "v2";
 const CACHE = `cc-static-${VERSION}`;
 const OFFLINE_URL = "/offline";
 
@@ -83,4 +83,45 @@ self.addEventListener("fetch", (event) => {
       })
     );
   }
+});
+
+
+/* ---- Web push (FCM) ------------------------------------------------
+ * Plain handlers — no Firebase SDK needed inside the SW. FCM delivers a
+ * standard web-push JSON payload: { notification: {title, body}, data: {link} }.
+ * ------------------------------------------------------------------ */
+self.addEventListener("push", (event) => {
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch (e) {
+    payload = { notification: { title: "Community Connect", body: "" } };
+  }
+  const n = payload.notification || {};
+  const link = (payload.data && payload.data.link) || "/";
+  event.waitUntil(
+    self.registration.showNotification(n.title || "Community Connect", {
+      body: n.body || "",
+      icon: "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
+      tag: n.tag || "cc",
+      data: { link },
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const link = (event.notification.data && event.notification.data.link) || "/";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if (client.url.includes(self.location.origin) && "focus" in client) {
+          client.navigate(link).catch(() => {});
+          return client.focus();
+        }
+      }
+      return self.clients.openWindow(link);
+    })
+  );
 });

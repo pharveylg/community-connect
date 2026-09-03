@@ -7,9 +7,11 @@ import {
   acceptOffer,
   closeJobPost,
   createJobPost,
+  getJobPost,
   makeOffer,
   withdrawOffer,
 } from "@/lib/jobboard";
+import { notify } from "@/lib/push";
 import { allowanceFor } from "@/lib/wallet";
 import { effectiveVerification } from "@/lib/verifications";
 import { EXTRA_ACCEPT_FEE_PESOS } from "@/lib/catalog";
@@ -107,6 +109,19 @@ export async function makeOfferAction(
   });
   if ("error" in result && result.error) return { error: result.error };
 
+  const post = await getJobPost(postId);
+  if (post) {
+    await notify({
+      uid: post.seekerUid,
+      type: "offer_received",
+      category: "bookingOffers",
+      urgent: true,
+      title: `New offer on “${post.title}”`,
+      body: `${profile.fullName.split(" ")[0]} offered ₱${parsed.data.amount.toLocaleString("en-PH")} — tap to review and accept.`,
+      link: "/seeker/requests",
+    });
+  }
+
   revalidatePath("/provider/jobs");
   revalidatePath("/seeker/requests");
   redirect("/provider/jobs?offered=1");
@@ -138,6 +153,18 @@ export async function acceptOfferAction(formData: FormData) {
   revalidatePath("/provider");
   if ("error" in result && result.error) {
     redirect(`/seeker/requests?error=${encodeURIComponent(result.error)}`);
+  }
+  const post = await getJobPost(postId);
+  if (post) {
+    await notify({
+      uid: providerUid,
+      type: "offer_selected",
+      category: "bookingOffers",
+      urgent: true,
+      title: `Your offer was selected 🎉`,
+      body: `Confirm the booking for “${post.title}” now to lock it in.`,
+      link: "/provider",
+    });
   }
   redirect("/seeker/requests?matched=1");
 }

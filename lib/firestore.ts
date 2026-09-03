@@ -23,6 +23,13 @@ export type Profile = {
   completedCount: number;
   /** Unique clients who vouched for this provider. */
   vouches: number;
+  /** Push-notification preferences (absent = all on; see lib/push). */
+  notificationPrefs?: {
+    bookingOffers?: boolean;
+    jobTrabaho?: boolean;
+    accountModeration?: boolean;
+    digest?: boolean;
+  };
   /** ID-verification state (admin-approved badge; see lib/verifications). */
   verificationStatus: string | null;
   verifiedAt: Date | null;
@@ -115,6 +122,7 @@ export async function listProfiles(limit = 50): Promise<Profile[]> {
       fullName: data.fullName ?? "",
       mobile: data.mobile ?? "",
       email: data.email ?? "",
+      notificationPrefs: data.notificationPrefs ?? undefined,
       role: data.role ?? null,
       bookingFor: data.bookingFor ?? null,
       credits: typeof data.credits === "number" ? data.credits : 0,
@@ -131,7 +139,7 @@ export async function listProfiles(limit = 50): Promise<Profile[]> {
 
 export async function updateProfile(
   uid: string,
-  data: Partial<Pick<Profile, "role" | "bookingFor">>
+  data: Partial<Pick<Profile, "role" | "bookingFor" | "notificationPrefs">>
 ) {
   await profileRef(uid).set(data, { merge: true });
 }
