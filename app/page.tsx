@@ -17,24 +17,8 @@ import { DotPattern } from "@/components/mp/dot-pattern";
 import { Marquee } from "@/components/mp/marquee";
 import { InstallButton } from "./install-button";
 import { PostRequestCta } from "@/components/post-request-cta";
-
-const STEPS = [
-  {
-    n: "01",
-    title: "Browse — or post what you need",
-    body: "Tricycle rides, tubero, cleaners, caregivers — filtered by barangay. Can't find it? Post the job and let verified providers come to you.",
-  },
-  {
-    n: "02",
-    title: "Send a booking request",
-    body: "Pick a date, add a note, done. The provider accepts or declines — often within minutes.",
-  },
-  {
-    n: "03",
-    title: "Pay them directly",
-    body: "Cash, GCash, or Maya — agreed between you two. No marks-ups, no app charges for seekers.",
-  },
-];
+import { RequestsBoard, type RequestRow } from "@/components/requests-board";
+import { listOpenJobPosts } from "@/lib/jobboard";
 
 export default async function Home({
   searchParams,
@@ -68,6 +52,22 @@ export default async function Home({
       })
     : services;
   const jobAds = (await listOpenAds()).slice(0, 3);
+  const openPosts = (await listOpenJobPosts()).slice(0, 6);
+  const requests: RequestRow[] = openPosts.map((p) => ({
+    id: p.id,
+    title: p.title,
+    category: getCategory(p.categorySlug)?.label ?? p.categorySlug,
+    barangay: p.barangay,
+    budget: p.budget ? `₱${p.budget.toLocaleString("en-PH")}` : "Open to quotes",
+    when:
+      p.whenNeeded === "flexible"
+        ? "flexible"
+        : (() => {
+            const d = new Date(p.whenNeeded);
+            return isNaN(d.getTime()) ? "soon" : d.toLocaleDateString("en-PH", { month: "short", day: "numeric" });
+          })(),
+    needsPro: p.needsPro,
+  }));
 
   return (
     <div className="relative flex flex-1 flex-col overflow-hidden">
@@ -86,6 +86,34 @@ export default async function Home({
       />
 
       <div className="relative mx-auto w-full max-w-md px-5 pt-16 xl:max-w-6xl 2xl:max-w-7xl">
+        {/* Category ticker — every service you can think of */}
+        <BlurFade delay={0}>
+          <div className="mb-5">
+            <h2 className="mb-2 text-center text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--c-text-3)" }}>
+              Every service you can think of
+            </h2>
+            <Marquee className="py-1">
+              {SERVICE_CATEGORIES.map((cat) => (
+                <span key={cat.slug} className="cc-chip">
+                  <span className="text-base leading-none">{cat.emoji}</span> {cat.label}
+                </span>
+              ))}
+            </Marquee>
+            <p className="mt-2 text-center text-xs" style={{ color: "var(--c-text-3)" }}>
+              Soon: 🛠 licensed pros — electricians, plumbers, aircon techs, certified caregivers — every credential verified.
+            </p>
+          </div>
+        </BlurFade>
+
+        {/* Auth links — opposite the brand, above the fold */}
+        <BlurFade delay={0}>
+          <div className="mb-4 flex items-center justify-end gap-3 text-xs font-semibold">
+            <Link href="/register" style={{ color: "var(--c-accent)" }}>Create account</Link>
+            <span style={{ color: "var(--c-text-3)" }}>·</span>
+            <Link href="/login" style={{ color: "var(--c-accent)" }}>Log in</Link>
+          </div>
+        </BlurFade>
+
         <div className="lg:max-w-md">
         {/* Hero */}
         <BlurFade delay={0} duration={0.5}>
@@ -109,21 +137,15 @@ export default async function Home({
           <p className="mb-7 max-w-[38ch] text-[15px] leading-relaxed" style={{ color: "var(--c-text-2)" }}>
             Community Connect pairs seekers — including seniors and the family
             who care for them — with trusted nearby providers for everyday,
-            cash-on-hand services.
+            cash-on-hand services.{" "}
+            <Link href="/how-it-works" className="font-semibold" style={{ color: "var(--c-accent)" }}>
+              How it works →
+            </Link>
           </p>
         </BlurFade>
 
-        <BlurFade delay={0.24}>
-          <div className="mb-9 flex flex-col gap-2.5">
-            <Link href="/register" className="cc-btn cc-btn-primary">
-              Create an account
-            </Link>
-            <Link href="/login" className="cc-btn cc-btn-secondary">
-              Log in
-            </Link>
-          </div>
-        </BlurFade>
         </div>
+
 
         {/* Public marketplace */}
         <BlurFade delay={0.3} inView>
@@ -158,37 +180,6 @@ export default async function Home({
           </div>
         </BlurFade>
 
-        {/* Trabaho strip */}
-        <BlurFade delay={0.3} inView>
-          <div className="cc-card mb-10">
-            <div className="mb-1 flex items-center justify-between gap-2">
-              <div className="text-sm font-semibold">💼 Trabaho — local hiring</div>
-              <Link href="/trabaho" className="text-xs font-semibold" style={{ color: "var(--c-accent)" }}>
-                See all →
-              </Link>
-            </div>
-            {jobAds.length === 0 ? (
-              <p className="mb-2 text-xs leading-relaxed" style={{ color: "var(--c-text-2)" }}>
-                Households &amp; small shops hiring locally — yaya, store helpers,
-                and more. Workers never pay to apply.
-              </p>
-            ) : (
-              <div className="mb-2.5 flex flex-col gap-2">
-                {jobAds.map((ad) => (
-                  <Link key={ad.id} href={`/trabaho/${ad.id}`} className="flex items-baseline justify-between gap-2 rounded-[10px] px-2.5 py-2" style={{ background: "var(--c-surface)", boxShadow: "var(--shadow-border)" }}>
-                    <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{ad.title}</span>
-                    <span className="shrink-0 text-[11px] cc-num" style={{ color: "var(--c-text-3)" }}>
-                      {salaryLine(ad) ?? "📍 " + ad.barangay}
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            )}
-            <Link href="/trabaho/post" className="text-xs font-semibold" style={{ color: "var(--c-accent)" }}>
-              Hiring? Post a job — free (ID-verified posters) →
-            </Link>
-          </div>
-        </BlurFade>
 
         <div className="mb-10 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {visibleServices.length === 0 && (
@@ -264,62 +255,68 @@ export default async function Home({
           })}
         </div>
 
+        {/* Open requests from neighbors — browse free, responding gates auth */}
+        <BlurFade delay={0.33} inView>
+          <div className="mb-10">
+            <div className="mb-3 flex items-end justify-between gap-2">
+              <div>
+                <h2 className="text-[22px] font-semibold tracking-tight">Requests</h2>
+                <p className="mt-0.5 text-xs" style={{ color: "var(--c-text-2)" }}>
+                  {requests.length} open request{requests.length === 1 ? "" : "s"} from your neighbors · quoting is free
+                </p>
+              </div>
+            </div>
+            <RequestsBoard requests={requests} />
+          </div>
+        </BlurFade>
+
         {/* Didn't find what they need? Let them post a request (anon → sign-up/log-in prompt). */}
         <BlurFade delay={0.34} inView>
           <PostRequestCta />
         </BlurFade>
 
-        <BlurFade delay={0.34} inView>
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--c-text-3)" }}>
-            Every service you can think of
-          </h2>
+        {/* Trabaho strip */}
+        <BlurFade delay={0.36} inView>
+          <div className="cc-card">
+            <div className="mb-1 flex items-center justify-between gap-2">
+              <div className="text-sm font-semibold">💼 Trabaho — local hiring</div>
+              <Link href="/trabaho" className="text-xs font-semibold" style={{ color: "var(--c-accent)" }}>
+                See all →
+              </Link>
+            </div>
+            {jobAds.length === 0 ? (
+              <p className="mb-2 text-xs leading-relaxed" style={{ color: "var(--c-text-2)" }}>
+                Households &amp; small shops hiring locally — yaya, store helpers,
+                and more. Workers never pay to apply.
+              </p>
+            ) : (
+              <div className="mb-2.5 flex flex-col gap-2">
+                {jobAds.map((ad) => (
+                  <Link key={ad.id} href={`/trabaho/${ad.id}`} className="flex items-baseline justify-between gap-2 rounded-[10px] px-2.5 py-2" style={{ background: "var(--c-surface)", boxShadow: "var(--shadow-border)" }}>
+                    <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{ad.title}</span>
+                    <span className="shrink-0 text-[11px] cc-num" style={{ color: "var(--c-text-3)" }}>
+                      {salaryLine(ad) ?? "📍 " + ad.barangay}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            )}
+            <Link href="/trabaho/post" className="text-xs font-semibold" style={{ color: "var(--c-accent)" }}>
+              Hiring? Post a job — free (ID-verified posters) →
+            </Link>
+          </div>
         </BlurFade>
+
       </div>
 
-      {/* Category marquee */}
-      <BlurFade delay={0.4} inView className="relative">
-        <Marquee className="py-1">
-          {SERVICE_CATEGORIES.map((cat) => (
-            <span key={cat.slug} className="cc-chip">
-              <span className="text-base leading-none">{cat.emoji}</span> {cat.label}
-            </span>
-          ))}
-        </Marquee>
-      </BlurFade>
-
-      <BlurFade delay={0.44} inView className="relative">
-        <p className="mt-3 px-5 text-center text-xs" style={{ color: "var(--c-text-3)" }}>
-          Soon: 🛠 licensed pros — electricians, plumbers, aircon techs, certified caregivers —
-          every credential verified.
-        </p>
-      </BlurFade>
-
       <div className="relative mx-auto w-full max-w-md px-5 pb-10 xl:max-w-6xl 2xl:max-w-7xl">
-        {/* How it works */}
         <BlurFade delay={0.1} inView>
-          <h2 className="mt-12 mb-5 text-[22px] font-semibold tracking-tight">How it works</h2>
+          <div className="mt-10 text-center">
+            <Link href="/how-it-works" className="text-xs font-semibold" style={{ color: "var(--c-accent)" }}>
+              New here? See how it works →
+            </Link>
+          </div>
         </BlurFade>
-        <div className="mb-12 grid grid-cols-1 gap-3 md:grid-cols-3">
-          {STEPS.map((step, i) => (
-            <BlurFade key={step.n} delay={0.14 + i * 0.1} inView>
-              <div className="cc-card flex gap-4">
-                <div
-                  className="cc-num flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] text-sm font-bold"
-                  style={{ background: "var(--c-accent-light)", color: "var(--c-accent)" }}
-                >
-                  {step.n}
-                </div>
-                <div>
-                  <div className="mb-1 text-[15px] font-semibold">{step.title}</div>
-                  <p className="text-[13px] leading-relaxed" style={{ color: "var(--c-text-2)" }}>
-                    {step.body}
-                  </p>
-                </div>
-              </div>
-            </BlurFade>
-          ))}
-        </div>
-
         <BlurFade delay={0.2} inView>
           <InstallButton />
         </BlurFade>
