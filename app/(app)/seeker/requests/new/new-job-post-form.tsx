@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { createJobPostAction } from "@/app/actions/jobboard";
-import { SERVICE_CATEGORIES, type CategorySlug } from "@/lib/catalog";
+import { PRO_SERVICE_CATEGORIES, SERVICE_CATEGORIES, type CategorySlug } from "@/lib/catalog";
 import { isNextRedirect } from "@/lib/client-errors";
 
 export function NewJobPostForm({
@@ -20,6 +20,7 @@ export function NewJobPostForm({
   const [flexible, setFlexible] = useState(true);
   const [whenNeeded, setWhenNeeded] = useState("");
   const [budget, setBudget] = useState("");
+  const [needsPro, setNeedsPro] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -37,10 +38,12 @@ export function NewJobPostForm({
     }
     setPending(true);
     try {
+      const proCat = PRO_SERVICE_CATEGORIES.some((c) => c.slug === categorySlug);
       const result = await createJobPostAction({
         title,
         description,
         categorySlug,
+        needsPro: needsPro || proCat,
         barangay,
         city,
         whenNeeded: flexible ? "flexible" : whenNeeded,
@@ -105,6 +108,45 @@ export function NewJobPostForm({
             </button>
           ))}
         </div>
+      </div>
+
+      <div>
+        <span className="cc-label">
+          Licensed pro needed?{" "}
+          <span style={{ color: "var(--c-text-3)" }}>— pros launch soon</span>
+        </span>
+        <div className="flex flex-wrap gap-1.5">
+          {PRO_SERVICE_CATEGORIES.map((cat) => (
+            <button
+              key={cat.slug}
+              type="button"
+              className={`cc-chip ${categorySlug === cat.slug ? "cc-chip-active" : ""}`}
+              onClick={() => {
+                setCategorySlug(cat.slug);
+                setNeedsPro(true);
+              }}
+            >
+              <span className="text-sm leading-none">{cat.emoji}</span> {cat.label}
+            </button>
+          ))}
+          <button
+            type="button"
+            className={`cc-chip ${
+              needsPro && !PRO_SERVICE_CATEGORIES.some((c) => c.slug === categorySlug)
+                ? "cc-chip-active"
+                : ""
+            }`}
+            onClick={() => setNeedsPro((v) => !v)}
+          >
+            🛠 Other category, but pro-level
+          </button>
+        </div>
+        {(needsPro || PRO_SERVICE_CATEGORIES.some((c) => c.slug === categorySlug)) && (
+          <p className="mt-2 text-xs leading-relaxed" style={{ color: "var(--c-text-3)" }}>
+            🛠 Providers with verified PRC/TESDA credentials launch soon. Until then, this post
+            stays open to every ✅ ID-verified provider.
+          </p>
+        )}
       </div>
 
       <div>

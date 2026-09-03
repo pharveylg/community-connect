@@ -6,6 +6,7 @@ import { getVouchedProviderUids, listSeekerBookings, type Booking } from "@/lib/
 import { trustBadgeStyle, trustTier, trustSummaryLine } from "@/lib/trust";
 import { effectiveVerification } from "@/lib/verifications";
 import {
+  PRO_SERVICE_CATEGORIES,
   SERVICE_CATEGORIES,
   LEAD_TIME_LABELS,
   formatRate,
@@ -192,6 +193,38 @@ export default async function SeekerHomePage({
               <span className="text-sm leading-none">{cat.emoji}</span> {cat.label}
             </Link>
           ))}
+        </div>
+      </BlurFade>
+
+      <BlurFade delay={0.14}>
+        <div className="cc-card mb-4">
+          <div className="mb-1 flex items-center justify-between gap-2">
+            <div className="text-sm font-semibold">🔧 Professional services</div>
+            <span
+              className="cc-badge"
+              style={{ background: "var(--c-accent-light)", color: "var(--c-accent)" }}
+            >
+              coming soon
+            </span>
+          </div>
+          <p className="mb-2.5 text-xs leading-relaxed" style={{ color: "var(--c-text-2)" }}>
+            Licensed electricians, plumbers, aircon techs, tutors, CPAs &amp; certified caregivers
+            — every credential checked by us before they can offer.
+          </p>
+          <div className="mb-3 flex flex-wrap gap-1.5">
+            {PRO_SERVICE_CATEGORIES.map((cat) => (
+              <span key={cat.slug} className="cc-chip" style={{ opacity: 0.72 }}>
+                <span className="text-sm leading-none">{cat.emoji}</span> {cat.label}
+              </span>
+            ))}
+          </div>
+          <Link
+            href="/seeker/requests/new"
+            className="text-xs font-semibold"
+            style={{ color: "var(--c-accent)" }}
+          >
+            Need one now? Post the job — ✅ verified providers can respond today →
+          </Link>
         </div>
       </BlurFade>
 

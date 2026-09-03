@@ -182,7 +182,17 @@ function JobPostCard({
 }) {
   return (
     <div className="cc-card">
-      <div className="mb-1 text-[15px] font-semibold">{post.title}</div>
+      <div className="mb-1 flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1 text-[15px] font-semibold">{post.title}</div>
+        {post.needsPro && (
+          <span
+            className="cc-badge"
+            style={{ background: "var(--c-accent-light)", color: "var(--c-accent)" }}
+          >
+            🛠 Pro requested
+          </span>
+        )}
+      </div>
       <div className="mb-2 text-xs" style={{ color: "var(--c-text-2)" }}>
         From {post.seekerName.split(" ")[0]} · 📍 {post.barangay}, {post.city} ·{" "}
         {post.whenNeeded === "flexible" ? "Flexible" : post.whenNeeded}

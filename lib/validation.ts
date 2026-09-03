@@ -1,5 +1,6 @@
 import * as z from "zod";
 import {
+  ALL_CATEGORY_SLUGS,
   CATEGORY_SLUGS,
   LEAD_TIMES,
   RATE_TYPES,
@@ -123,7 +124,8 @@ export type VerificationInput = z.infer<typeof VerificationSchema>;
 export const JobPostSchema = z.object({
   title: z.string().trim().min(4, "Give your request a short title (e.g. Aircon cleaning).").max(80),
   description: z.string().trim().max(400, "Keep details under 400 characters.").optional().default(""),
-  categorySlug: z.enum(CATEGORY_SLUGS, "Please choose a category."),
+  categorySlug: z.enum(ALL_CATEGORY_SLUGS, "Please choose a category."),
+  needsPro: z.boolean().optional().default(false),
   barangay: z.string().trim().min(2, "Please enter your barangay.").max(60),
   city: z.string().trim().min(2, "Please enter your city.").max(60),
   whenNeeded: z.string().trim().max(20).optional().default("flexible"),

@@ -37,6 +37,7 @@ export async function createJobPostAction(input: JobPostInput) {
     city: parsed.data.city,
     whenNeeded: parsed.data.whenNeeded || "flexible",
     budget: parsed.data.budget ?? null,
+    needsPro: parsed.data.needsPro ?? false,
   });
   if ("error" in result && result.error) return { error: result.error };
 

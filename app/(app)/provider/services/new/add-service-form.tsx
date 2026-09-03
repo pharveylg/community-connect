@@ -9,6 +9,7 @@ import {
   LEAD_TIME_LABELS,
   RATE_TYPES,
   RATE_TYPE_LABELS,
+  PRO_SERVICE_CATEGORIES,
   SERVICE_CATEGORIES,
   CUSTOM_CATEGORY,
   type CategorySlug,
@@ -201,6 +202,43 @@ export function AddServiceForm() {
                   </button>
                 );
               })}
+            </div>
+
+            <div
+              className="mt-1 mb-1 text-[11px] font-semibold uppercase tracking-[0.14em]"
+              style={{ color: "var(--c-text-3)" }}
+            >
+              🔧 Licensed pro? Coming soon
+            </div>
+            <div className="mb-2 grid grid-cols-2 gap-2">
+              {PRO_SERVICE_CATEGORIES.map((cat) => (
+                <button
+                  key={cat.slug}
+                  type="button"
+                  disabled
+                  className="relative rounded-[16px] p-3 text-left"
+                  style={{
+                    background: "var(--c-surface)",
+                    boxShadow: "var(--shadow-border)",
+                    opacity: 0.6,
+                    cursor: "not-allowed",
+                  }}
+                >
+                  <span
+                    className="cc-badge absolute right-2 top-2"
+                    style={{ background: "var(--c-surface)", color: "var(--c-text-3)" }}
+                  >
+                    🔒
+                  </span>
+                  <div className="mb-1.5 text-xl">{cat.emoji}</div>
+                  <div className="mb-0.5 text-[12.5px] font-semibold leading-tight">
+                    {cat.label}
+                  </div>
+                  <div className="text-[11px] leading-snug" style={{ color: "var(--c-text-2)" }}>
+                    Pro verification (PRC/TESDA) opens soon.
+                  </div>
+                </button>
+              ))}
             </div>
 
             {categorySlug && (

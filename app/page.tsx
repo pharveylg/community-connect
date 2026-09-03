@@ -110,6 +110,13 @@ export default async function Home() {
         </Marquee>
       </BlurFade>
 
+      <BlurFade delay={0.44} inView className="relative">
+        <p className="mt-3 px-5 text-center text-xs" style={{ color: "var(--c-text-3)" }}>
+          Soon: 🛠 licensed pros — electricians, plumbers, aircon techs, certified caregivers —
+          every credential verified.
+        </p>
+      </BlurFade>
+
       <div className="relative mx-auto w-full max-w-md px-5 pb-10">
         {/* How it works */}
         <BlurFade delay={0.1} inView>

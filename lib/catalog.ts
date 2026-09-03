@@ -9,6 +9,18 @@
 //   junk & scrap metal hauling — with their own rates. Frequently created
 //   custom services are candidates to graduate into official categories.
 
+// Professional-tier slugs (Task 13, Phase A placeholder). These launch with
+// pro verification in Phase B; until then seekers may post job-board requests
+// in them (demand capture) but providers cannot create listings.
+export type ProCategorySlug =
+  | "electrical"
+  | "plumbing"
+  | "aircon-repair"
+  | "appliance-repair"
+  | "tutoring"
+  | "bookkeeping"
+  | "licensed-care";
+
 export type CategorySlug =
   | "transport"
   | "handyman"
@@ -17,7 +29,8 @@ export type CategorySlug =
   | "gardening"
   | "care-home"
   | "events"
-  | "other";
+  | "other"
+  | ProCategorySlug;
 
 export type Category = {
   slug: CategorySlug;
@@ -83,8 +96,34 @@ export const CATEGORY_SLUGS = SERVICE_CATEGORIES.map((c) => c.slug) as [
 ];
 
 export function getCategory(slug: string): Category | undefined {
-  return SERVICE_CATEGORIES.find((c) => c.slug === slug);
+  return (
+    SERVICE_CATEGORIES.find((c) => c.slug === slug) ??
+    PRO_SERVICE_CATEGORIES.find((c) => c.slug === slug)
+  );
 }
+
+// --- Professional tier (Phase A: placeholder, locked for listings) ----------
+
+export const PRO_SERVICE_CATEGORIES: Category[] = [
+  { slug: "electrical", label: "Electrical Repairs", emoji: "⚡", blurb: "Wiring, outlets, breakers — licensed electricians" },
+  { slug: "plumbing", label: "Plumbing Repairs", emoji: "🚰", blurb: "Leaks, installs, pipe work — certified plumbers" },
+  { slug: "aircon-repair", label: "Aircon & Ref Repair", emoji: "❄️", blurb: "Diagnostics, repairs, freon — RAC-certified techs" },
+  { slug: "appliance-repair", label: "Appliance Repair", emoji: "📺", blurb: "Washers, TVs, cookers — certified technicians" },
+  { slug: "tutoring", label: "Tutoring", emoji: "📚", blurb: "LET-licensed teachers, all levels & subjects" },
+  { slug: "bookkeeping", label: "Bookkeeping & Tax", emoji: "🧾", blurb: "CPA bookkeeping, invoicing, BIR filing help" },
+  { slug: "licensed-care", label: "Licensed Caregiving", emoji: "🧑‍⚕️", blurb: "Caregiving NC II holders for elderly care" },
+];
+
+export const PRO_CATEGORY_SLUGS = PRO_SERVICE_CATEGORIES.map((c) => c.slug) as [
+  ProCategorySlug,
+  ...ProCategorySlug[],
+];
+
+/** Everything a JOB POST may use (casual + pro). Service listings stay casual-only until Phase B. */
+export const ALL_CATEGORY_SLUGS = [...CATEGORY_SLUGS, ...PRO_CATEGORY_SLUGS] as [
+  CategorySlug,
+  ...CategorySlug[],
+];
 
 export const CUSTOM_CATEGORY: CategorySlug = "other";
 

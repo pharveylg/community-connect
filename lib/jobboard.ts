@@ -1,7 +1,7 @@
 import "server-only";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase/admin";
-import type { CategorySlug } from "@/lib/catalog";
+import { getCategory, type CategorySlug } from "@/lib/catalog";
 
 // Reverse job board: seekers post needs (even unlisted services), verified
 // providers make priced offers, double handshake -> normal booking.
@@ -24,6 +24,7 @@ export type JobPost = {
   description: string;
   categorySlug: CategorySlug;
   custom: boolean;
+  needsPro: boolean;
   barangay: string;
   city: string;
   whenNeeded: string; // ISO date or "flexible"
@@ -62,6 +63,7 @@ function postFromSnap(id: string, d: FirebaseFirestore.DocumentData): JobPost {
     title: d.title,
     description: d.description ?? "",
     categorySlug: d.categorySlug,
+    needsPro: d.needsPro === true,
     custom: d.custom === true,
     barangay: d.barangay,
     city: d.city,
@@ -101,6 +103,7 @@ export async function createJobPost(input: {
   title: string;
   description: string;
   categorySlug: CategorySlug;
+  needsPro?: boolean;
   barangay: string;
   city: string;
   whenNeeded: string;
@@ -116,6 +119,7 @@ export async function createJobPost(input: {
   const ref = await postsCol().add({
     ...input,
     custom: input.categorySlug === "other",
+    needsPro: input.needsPro ?? false,
     status: "open",
     acceptedOfferId: null,
     filledBookingId: null,
@@ -261,7 +265,10 @@ export async function acceptOffer(input: {
       tx.set(bookingRef, {
         serviceId: `job_${input.postId}`,
         serviceTitle: post.title,
-        categoryLabel: post.categorySlug === "other" ? "Job board" : post.categorySlug,
+        categoryLabel:
+          post.categorySlug === "other"
+            ? "Job board"
+            : (getCategory(post.categorySlug)?.label ?? post.categorySlug),
         rateAmount: offer.amount,
         rateType: "per_job",
         providerUid: offer.providerUid,

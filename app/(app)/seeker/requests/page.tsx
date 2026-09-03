@@ -93,7 +93,15 @@ export default async function MyRequestsPage({
             <BlurFade key={post.id} delay={0.08 + i * 0.06}>
               <div className="cc-card">
                 <div className="mb-1 flex items-start justify-between gap-2">
-                  <div className="text-[15px] font-semibold">{post.title}</div>
+                  <div className="min-w-0 flex-1 text-[15px] font-semibold">{post.title}</div>
+                  {post.needsPro && (
+                    <span
+                      className="cc-badge"
+                      style={{ background: "var(--c-accent-light)", color: "var(--c-accent)" }}
+                    >
+                      🛠 Pro requested
+                    </span>
+                  )}
                   <span className="cc-badge" style={{ background: st.bg, color: st.fg }}>
                     {st.label}
                   </span>
