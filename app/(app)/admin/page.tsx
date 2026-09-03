@@ -19,6 +19,7 @@ import {
 } from "@/lib/moderation";
 import { TOPUP_METHOD_LABELS, formatPeso, type TopUpMethod } from "@/lib/catalog";
 import { BlurFade } from "@/components/mp/blur-fade";
+import AdminReports from "./reports";
 import { AnimatedNumber } from "@/components/mp/animated-number";
 
 export default async function AdminHomePage({
@@ -38,9 +39,11 @@ export default async function AdminHomePage({
       ? params.verification === "approved"
         ? "Verification approved — badge granted, documents purged."
         : "Verification rejected — reason sent to the provider."
-      : typeof params.error === "string"
-        ? params.error
-        : null;
+      : typeof params.cleaned === "string"
+        ? `Cleanup done — ${params.cleaned.split(":")[0].replace(/_/g, " ")}: ${params.cleaned.split(":")[1] ?? 0} docs deleted.`
+        : typeof params.error === "string"
+          ? params.error
+          : null;
 
   const [pendingTopUps, users, events, listings, pendingVerifications, unresolvedReports, flagged] =
     await Promise.all([
@@ -59,6 +62,7 @@ export default async function AdminHomePage({
     { id: "topups", label: "💳 Top-up approvals", count: pendingTopUps.length },
     { id: "ledger", label: "📚 Platform ledger", count: 0 },
     { id: "users", label: "👥 Users", count: 0 },
+    { id: "reports", label: "📊 Reports", count: 0 },
   ] as const;
   type TabId = (typeof TABS)[number]["id"];
   const tab: TabId = TABS.some((t) => t.id === params.tab) ? (params.tab as TabId) : "moderation";
@@ -441,6 +445,13 @@ export default async function AdminHomePage({
         ))}
       </div>
       </>
+      )}
+
+      {tab === "reports" && (
+        <AdminReports
+          section={typeof params.s === "string" ? params.s : ""}
+          window={typeof params.w === "string" ? params.w : "30d"}
+        />
       )}
     </div>
   );
