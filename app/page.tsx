@@ -3,7 +3,14 @@ import { redirect } from "next/navigation";
 import { getProfile } from "@/lib/firestore";
 import { getSessionUid } from "@/lib/dal";
 import { roleHomePath } from "@/lib/roles";
-import { SERVICE_CATEGORIES } from "@/lib/catalog";
+import {
+  SERVICE_CATEGORIES,
+  getCategory,
+  formatRate,
+} from "@/lib/catalog";
+import { browseServices, getProviderTrust } from "@/lib/firestore";
+import { trustBadgeStyle, trustTier, trustSummaryLine } from "@/lib/trust";
+import { effectiveVerification } from "@/lib/verifications";
 import { BlurFade } from "@/components/mp/blur-fade";
 import { DotPattern } from "@/components/mp/dot-pattern";
 import { Marquee } from "@/components/mp/marquee";
@@ -27,7 +34,11 @@ const STEPS = [
   },
 ];
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string; verified?: string }>;
+}) {
   // Soft check: an invalid/stale cookie just renders the landing page —
   // never a redirect (loops are impossible by construction).
   const uid = await getSessionUid();
@@ -37,6 +48,23 @@ export default async function Home() {
     if (!profile.role) redirect("/onboarding?step=role");
     redirect(roleHomePath(profile.role));
   }
+
+  // Public marketplace: anonymous visitors browse ALL listings up front;
+  // selecting a service leads to /services/[id] where booking prompts
+  // sign-up / log-in (with ?next= returning them straight back).
+  const sp = await searchParams;
+  const category = sp.category ? getCategory(sp.category) : undefined;
+  const verifiedOnly = sp.verified === "1";
+  const services = await browseServices(category?.slug);
+  const trust = await getProviderTrust([...new Set(services.map((x) => x.providerUid))]);
+  const visibleServices = verifiedOnly
+    ? services.filter((x) => {
+        const t = trust.get(x.providerUid);
+        return (
+          t && effectiveVerification(t.verificationStatus, t.verifiedUntil) === "verified"
+        );
+      })
+    : services;
 
   return (
     <div className="relative flex flex-1 flex-col overflow-hidden">
@@ -82,7 +110,7 @@ export default async function Home() {
         </BlurFade>
 
         <BlurFade delay={0.24}>
-          <div className="mb-12 flex flex-col gap-2.5">
+          <div className="mb-9 flex flex-col gap-2.5">
             <Link href="/register" className="cc-btn cc-btn-primary">
               Create an account
             </Link>
@@ -91,6 +119,113 @@ export default async function Home() {
             </Link>
           </div>
         </BlurFade>
+
+        {/* Public marketplace */}
+        <BlurFade delay={0.3} inView>
+          <div className="mb-3 flex items-end justify-between gap-2">
+            <div>
+              <h2 className="text-[22px] font-semibold tracking-tight">Services near you</h2>
+              <p className="mt-0.5 text-xs" style={{ color: "var(--c-text-2)" }}>
+                {visibleServices.length} listing{visibleServices.length === 1 ? "" : "s"} · book
+                free — pay the provider directly
+              </p>
+            </div>
+          </div>
+          <div className="mb-4 flex flex-wrap gap-1.5">
+            <Link href="/" className={`cc-chip ${!category && !verifiedOnly ? "cc-chip-active" : ""}`}>
+              All
+            </Link>
+            <Link
+              href={`/?verified=1${category ? `&category=${category.slug}` : ""}`}
+              className={`cc-chip ${verifiedOnly ? "cc-chip-active" : ""}`}
+            >
+              ✅ Verified only
+            </Link>
+            {SERVICE_CATEGORIES.map((cat) => (
+              <Link
+                key={cat.slug}
+                href={`/?category=${cat.slug}${verifiedOnly ? "&verified=1" : ""}`}
+                className={`cc-chip ${category?.slug === cat.slug ? "cc-chip-active" : ""}`}
+              >
+                <span className="text-sm leading-none">{cat.emoji}</span> {cat.label}
+              </Link>
+            ))}
+          </div>
+        </BlurFade>
+
+        <div className="mb-10 flex flex-col gap-3">
+          {visibleServices.length === 0 && (
+            <BlurFade delay={0.34} inView>
+              <div className="cc-card text-center">
+                <div className="mb-1.5 text-sm font-medium">
+                  {category ? `No ${category.label.toLowerCase()} services yet` : "No services listed yet"}
+                </div>
+                <div className="text-xs" style={{ color: "var(--c-text-2)" }}>
+                  Providers are signing up — check another category, or come back soon.
+                </div>
+              </div>
+            </BlurFade>
+          )}
+
+          {visibleServices.map((service, i) => {
+            const t = trust.get(service.providerUid);
+            const tier = t ? trustTier(t.completedCount, t.vouches) : null;
+            const verified = t
+              ? effectiveVerification(t.verificationStatus, t.verifiedUntil) === "verified"
+              : false;
+            return (
+              <BlurFade key={service.id} delay={0.32 + Math.min(i, 6) * 0.04} inView>
+                <Link href={`/services/${service.id}`} className="cc-card-interactive block">
+                  <div className="mb-1 flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1 text-[15px] font-semibold">{service.title}</div>
+                    {service.custom && (
+                      <span
+                        className="cc-badge"
+                        style={{ background: "var(--c-accent-light)", color: "var(--c-accent)" }}
+                      >
+                        ✨ custom
+                      </span>
+                    )}
+                  </div>
+                  <div className="mb-1 text-xs" style={{ color: "var(--c-text-2)" }}>
+                    {service.categoryLabel} · by {service.providerName}
+                  </div>
+                  {tier && t && (
+                    <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                      <span className="cc-badge" style={trustBadgeStyle(tier.key)}>
+                        {tier.emoji} {tier.label}
+                      </span>
+                      {verified && (
+                        <span
+                          className="cc-badge"
+                          style={{ background: "var(--c-accent-light)", color: "var(--c-accent)" }}
+                        >
+                          ✅ ID Verified
+                        </span>
+                      )}
+                      <span className="text-[11px]" style={{ color: "var(--c-text-3)" }}>
+                        {trustSummaryLine(t.completedCount, t.vouches)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex items-baseline justify-between gap-2">
+                    <div className="text-sm font-semibold cc-num">
+                      {formatRate(service.rateAmount, service.rateType)}
+                      {service.negotiable && (
+                        <span className="ml-1.5 text-[11px] font-normal" style={{ color: "var(--c-text-3)" }}>
+                          negotiable
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[11px]" style={{ color: "var(--c-text-3)" }}>
+                      📍 {service.barangay}
+                    </div>
+                  </div>
+                </Link>
+              </BlurFade>
+            );
+          })}
+        </div>
 
         <BlurFade delay={0.34} inView>
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--c-text-3)" }}>
@@ -113,7 +248,8 @@ export default async function Home() {
       <BlurFade delay={0.44} inView className="relative">
         <p className="mt-3 px-5 text-center text-xs" style={{ color: "var(--c-text-3)" }}>
           Soon: 🛠 licensed pros — electricians, plumbers, aircon techs, certified caregivers —
-          every credential verified.
+          every credential verified. Soon: 💼 Trabaho — households &amp; small shops hiring
+          locally, posted by ID-verified accounts.
         </p>
       </BlurFade>
 

@@ -4,9 +4,14 @@ import { LoginForm } from "./login-form";
 import { BlurFade } from "@/components/mp/blur-fade";
 import { getSessionUid } from "@/lib/dal";
 import { getProfile } from "@/lib/firestore";
-import { roleHomePath } from "@/lib/roles";
+import { roleHomePath, safeNextPath } from "@/lib/roles";
 
-export default async function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const next = safeNextPath((await searchParams).next);
   // Only a VALID session is redirected home; a stale cookie must be able
   // to see and use the login form (it gets replaced on sign-in).
   const uid = await getSessionUid();
@@ -26,13 +31,17 @@ export default async function LoginPage() {
         </BlurFade>
 
         <BlurFade delay={0.08}>
-          <LoginForm />
+          <LoginForm next={next} />
         </BlurFade>
 
         <BlurFade delay={0.16}>
           <p className="mt-5 text-center text-sm" style={{ color: "var(--c-text-2)" }}>
             Don&apos;t have an account?{" "}
-            <Link href="/register" className="font-semibold" style={{ color: "var(--c-accent)" }}>
+            <Link
+            href={`/register${next ? `?next=${encodeURIComponent(next)}` : ""}`}
+            className="font-semibold"
+            style={{ color: "var(--c-accent)" }}
+          >
               Sign up
             </Link>
           </p>

@@ -8,7 +8,7 @@ import { LoginSchema } from "@/lib/validation";
 import { login } from "@/app/actions/auth";
 import { isNextRedirect } from "@/lib/client-errors";
 
-export function LoginForm() {
+export function LoginForm({ next }: { next: string | null }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +32,7 @@ export function LoginForm() {
         parsed.data.password
       );
       const idToken = await credential.user.getIdToken();
-      await login(idToken);
+      await login(idToken, next ?? undefined);
     } catch (err) {
       // A redirect from the action is a SUCCESS — navigation is in progress.
       if (isNextRedirect(err)) return;

@@ -12,7 +12,7 @@ import {
 } from "@/lib/firestore";
 import { createSession, deleteSession } from "@/lib/session";
 import { verifySession } from "@/lib/dal";
-import { roleHomePath } from "@/lib/roles";
+import { roleHomePath, safeNextPath } from "@/lib/roles";
 import { normalizePhMobile } from "@/lib/validation";
 import {
   CompleteProfileSchema,
@@ -50,10 +50,10 @@ export async function registerAccount(
   return { success: true as const };
 }
 
-export async function completeProfile(input: {
-  fullName: string;
-  mobile: string;
-}) {
+export async function completeProfile(
+  input: { fullName: string; mobile: string },
+  next?: string
+) {
   const parsed = CompleteProfileSchema.safeParse(input);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid details." };
@@ -63,7 +63,7 @@ export async function completeProfile(input: {
 
   // Guard against overwriting an existing profile (e.g. double submit).
   const existing = await getProfile(uid);
-  if (existing) redirect(roleHomePath(existing.role));
+  if (existing) redirect(safeNextPath(next) ?? roleHomePath(existing.role));
 
   const user = await getAdminAuth().getUser(uid);
   await createProfile(uid, {
@@ -71,18 +71,19 @@ export async function completeProfile(input: {
     mobile: normalizePhMobile(parsed.data.mobile)!,
     email: user.email ?? "",
   });
-  redirect("/onboarding?step=role");
+  redirect(`/onboarding?step=role${safeNextPath(next) ? `&next=${encodeURIComponent(safeNextPath(next)!)}` : ""}`);
 }
 
-export async function login(idToken: string) {
+export async function login(idToken: string, next?: string) {
   await createSession(idToken);
   const { uid } = await verifySession();
   const profile = await getProfile(uid);
   // Authenticated but profile incomplete (or role never chosen): resume
   // onboarding instead of dead-ending in a redirect loop.
-  if (!profile) redirect("/onboarding");
-  if (!profile.role) redirect("/onboarding?step=role");
-  redirect(roleHomePath(profile.role));
+  const dest = safeNextPath(next);
+  if (!profile) redirect(`/onboarding${dest ? `?next=${encodeURIComponent(dest)}` : ""}`);
+  if (!profile.role) redirect(`/onboarding?step=role${dest ? `&next=${encodeURIComponent(dest)}` : ""}`);
+  redirect(dest ?? roleHomePath(profile.role));
 }
 
 export async function logout() {
@@ -90,7 +91,7 @@ export async function logout() {
   redirect("/login");
 }
 
-export async function setRole(role: SelfSelectableRole) {
+export async function setRole(role: SelfSelectableRole, next?: string) {
   // Defense in depth: never let this public action grant admin.
   if (role !== "seeker" && role !== "provider") {
     throw new Error("Invalid role.");
@@ -108,19 +109,19 @@ export async function setRole(role: SelfSelectableRole) {
   if (role === "seeker") return { next: "seekerOnboard" as const };
 
   await updateProfile(uid, { bookingFor: null });
-  redirect(roleHomePath(role));
+  redirect(safeNextPath(next) ?? roleHomePath(role));
 }
 
-export async function setBookingFor(bookingFor: BookingFor) {
+export async function setBookingFor(bookingFor: BookingFor, next?: string) {
   const { uid } = await verifySession();
   await updateProfile(uid, { bookingFor });
 
   if (bookingFor === "dependent") return { next: "dependentSetup" as const };
 
-  redirect(roleHomePath("seeker"));
+  redirect(safeNextPath(next) ?? roleHomePath("seeker"));
 }
 
-export async function addDependentAction(input: DependentInput) {
+export async function addDependentAction(input: DependentInput, next?: string) {
   const parsed = DependentSchema.safeParse(input);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid details." };
@@ -128,10 +129,10 @@ export async function addDependentAction(input: DependentInput) {
 
   const { uid } = await verifySession();
   await addDependent(uid, parsed.data);
-  redirect(roleHomePath("seeker"));
+  redirect(safeNextPath(next) ?? roleHomePath("seeker"));
 }
 
-export async function skipDependentSetup() {
+export async function skipDependentSetup(next?: string) {
   await verifySession();
-  redirect(roleHomePath("seeker"));
+  redirect(safeNextPath(next) ?? roleHomePath("seeker"));
 }

@@ -2,17 +2,22 @@ import { redirect } from "next/navigation";
 import { getAdminAuth } from "@/lib/firebase/admin";
 import { getProfile } from "@/lib/firestore";
 import { verifySession } from "@/lib/dal";
-import { roleHomePath } from "@/lib/roles";
+import { roleHomePath, safeNextPath } from "@/lib/roles";
 import { CompleteProfileFlow } from "./complete-profile-flow";
 import { BlurFade } from "@/components/mp/blur-fade";
 
-export default async function OnboardingPage() {
+export default async function OnboardingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const next = safeNextPath((await searchParams).next);
   const { uid } = await verifySession();
   const profile = await getProfile(uid);
 
   if (profile?.role) {
-    // Already fully onboarded — nothing to complete.
-    redirect(roleHomePath(profile.role));
+    // Already fully onboarded — honor ?next= (e.g. back to a booking).
+    redirect(next ?? roleHomePath(profile.role));
   }
 
   const email = profile?.email || (await getAdminAuth().getUser(uid)).email || "";
@@ -31,7 +36,7 @@ export default async function OnboardingPage() {
           </p>
         </BlurFade>
         <BlurFade delay={0.08}>
-          <CompleteProfileFlow email={email} hasProfile={Boolean(profile)} />
+          <CompleteProfileFlow email={email} hasProfile={Boolean(profile)} next={next} />
         </BlurFade>
       </div>
     </div>

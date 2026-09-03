@@ -25,7 +25,7 @@ const STEP_PROGRESS: Record<Step, number> = {
   dependentSetup: 95,
 };
 
-export function RegisterFlow() {
+export function RegisterFlow({ next }: { next: string | null }) {
   const [step, setStep] = useState<Step>("basic");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -91,7 +91,7 @@ export function RegisterFlow() {
 
   async function handleSelectRole(role: "seeker" | "provider") {
     await guard(async () => {
-      const result = await setRole(role);
+      const result = await setRole(role, next ?? undefined);
       if (result?.error) {
         setError(result.error);
         setPending(false);
@@ -107,7 +107,7 @@ export function RegisterFlow() {
 
   async function handleBookingFor(bookingFor: "self" | "dependent") {
     await guard(async () => {
-      const result = await setBookingFor(bookingFor);
+      const result = await setBookingFor(bookingFor, next ?? undefined);
       if (result?.next === "dependentSetup") {
         setStep("dependentSetup");
         setPending(false);
@@ -132,7 +132,7 @@ export function RegisterFlow() {
 
     setPending(true);
     try {
-      await addDependentAction(parsed.data);
+      await addDependentAction(parsed.data, next ?? undefined);
     } catch (err) {
       if (isNextRedirect(err)) return;
       setError("Something went wrong. Please try again.");
@@ -424,7 +424,7 @@ export function RegisterFlow() {
               style={{ width: "auto", fontSize: 13 }}
               disabled={pending}
               onClick={() => {
-                void guard(() => skipDependentSetup());
+                void guard(() => skipDependentSetup(next ?? undefined));
               }}
             >
               Skip for now

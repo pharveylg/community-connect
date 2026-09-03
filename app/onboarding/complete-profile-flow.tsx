@@ -15,11 +15,14 @@ import { CompleteProfileSchema, DependentSchema } from "@/lib/validation";
 type Step = "basic" | "role" | "seekerOnboard" | "dependentSetup";
 
 export function CompleteProfileFlow({
+  next,
+
   email,
   hasProfile,
 }: {
   email: string;
   hasProfile: boolean;
+  next: string | null;
 }) {
   const [step, setStep] = useState<Step>(hasProfile ? "role" : "basic");
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +57,7 @@ export function CompleteProfileFlow({
       return;
     }
     await guard(async () => {
-      const result = await completeProfile(parsed.data);
+      const result = await completeProfile(parsed.data, next ?? undefined);
       if (result?.error) {
         setError(result.error);
         setPending(false);
@@ -67,7 +70,7 @@ export function CompleteProfileFlow({
 
   async function handleSelectRole(role: "seeker" | "provider") {
     await guard(async () => {
-      const result = await setRole(role);
+      const result = await setRole(role, next ?? undefined);
       if (result?.error) {
         setError(result.error);
         setPending(false);
@@ -83,7 +86,7 @@ export function CompleteProfileFlow({
 
   async function handleBookingFor(bookingFor: "self" | "dependent") {
     await guard(async () => {
-      const result = await setBookingFor(bookingFor);
+      const result = await setBookingFor(bookingFor, next ?? undefined);
       if (result?.next === "dependentSetup") {
         setStep("dependentSetup");
         setPending(false);
@@ -103,7 +106,7 @@ export function CompleteProfileFlow({
       setError(parsed.error.issues[0]?.message ?? "Please check your details.");
       return;
     }
-    await guard(() => addDependentAction(parsed.data));
+    await guard(() => addDependentAction(parsed.data, next ?? undefined));
   }
 
   return (
@@ -305,7 +308,7 @@ export function CompleteProfileFlow({
               className="cc-btn cc-btn-ghost"
               style={{ width: "auto", fontSize: 13 }}
               disabled={pending}
-              onClick={() => guard(() => skipDependentSetup())}
+              onClick={() => guard(() => skipDependentSetup(next ?? undefined))}
             >
               Skip for now
             </button>
