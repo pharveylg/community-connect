@@ -3,6 +3,7 @@ import { getSessionUid } from "@/lib/dal";
 import { getProfile } from "@/lib/firestore";
 import { effectiveVerification } from "@/lib/verifications";
 import { BlurFade } from "@/components/mp/blur-fade";
+import { BackLink } from "@/components/back-link";
 import { PostJobAdForm } from "./post-job-ad-form";
 
 const VERIFICATION_COPY: Record<string, { title: string; body: string }> = {
@@ -18,6 +19,7 @@ export default async function PostJobAdPage() {
   if (!uid) {
     return (
       <div className="mx-auto w-full max-w-sm">
+        <BackLink href="/trabaho" label="Trabaho" />
         <BlurFade delay={0}>
           <h1 className="mb-1 text-[24px] font-semibold tracking-tight">Post a job</h1>
           <div className="cc-card">
@@ -84,10 +86,13 @@ export default async function PostJobAdPage() {
   }
 
   return (
-    <PostJobAdForm
-      defaultBarangay=""
-      defaultCity="Cagayan de Oro City"
-      posterName={profile.fullName}
-    />
+    <div className="mx-auto w-full max-w-sm">
+        <BackLink href="/trabaho" label="Trabaho" />
+        <PostJobAdForm
+          defaultBarangay=""
+          defaultCity="Cagayan de Oro City"
+          posterName={profile.fullName}
+        />
+      </div>
   );
 }

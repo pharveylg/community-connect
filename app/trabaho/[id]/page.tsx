@@ -4,7 +4,8 @@ import { getSessionUid } from "@/lib/dal";
 import { getProfile } from "@/lib/firestore";
 import { getJobAd, getInterest, salaryLine, adIsOpen } from "@/lib/trabaho";
 import { getWorkCategory } from "@/lib/catalog";
-import { withdrawInterestAction, reportAdAction } from "@/app/actions/trabaho";
+import { withdrawInterestAction } from "@/app/actions/trabaho";
+import { reportAction } from "@/app/actions/moderation";
 import { BlurFade } from "@/components/mp/blur-fade";
 import { InterestForm } from "./interest-form";
 
@@ -172,8 +173,10 @@ export default async function TrabahoAdPage({
             <summary className="cursor-pointer text-xs font-medium" style={{ color: "var(--c-text-2)" }}>
               ⚠ Report this ad
             </summary>
-            <form action={reportAdAction} className="mt-2 flex flex-col gap-2">
-              <input type="hidden" name="adId" value={ad.id} />
+            <form action={reportAction} className="mt-2 flex flex-col gap-2">
+              <input type="hidden" name="targetType" value="job_ad" />
+              <input type="hidden" name="targetId" value={ad.id} />
+              <input type="hidden" name="back" value={`/trabaho/${ad.id}`} />
               <textarea
                 name="reason"
                 className="cc-input"

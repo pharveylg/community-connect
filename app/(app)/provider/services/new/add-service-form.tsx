@@ -465,6 +465,9 @@ export function AddServiceForm() {
               >
                 Back
               </button>
+              <p className="text-[11px] leading-relaxed" style={{ color: "var(--c-text-3)" }}>
+                Listings are reviewed. Illegal content is reported to authorities.
+              </p>
               <button type="submit" className="cc-btn cc-btn-primary" disabled={pending}>
                 {pending ? "Publishing…" : "Publish service"}
               </button>

@@ -15,6 +15,7 @@ import { effectiveVerification } from "@/lib/verifications";
 import { EXTRA_ACCEPT_FEE_PESOS } from "@/lib/catalog";
 import { JobOfferSchema, JobPostSchema } from "@/lib/validation";
 import type { JobOfferInput, JobPostInput } from "@/lib/validation";
+import { guardContent } from "@/lib/content-guard";
 
 export async function createJobPostAction(input: JobPostInput) {
   const parsed = JobPostSchema.safeParse(input);
@@ -25,6 +26,9 @@ export async function createJobPostAction(input: JobPostInput) {
   if (profile.role === "provider") {
     return { error: "You're registered as a provider — post from a seeker account." };
   }
+
+  const guard = guardContent({ title: parsed.data.title, details: parsed.data.description ?? "" });
+  if ("error" in guard) return { error: guard.error };
 
   const result = await createJobPost({
     seekerUid: profile.uid,
@@ -38,6 +42,7 @@ export async function createJobPostAction(input: JobPostInput) {
     whenNeeded: parsed.data.whenNeeded || "flexible",
     budget: parsed.data.budget ?? null,
     needsPro: parsed.data.needsPro ?? false,
+    moderation: guard.flags.length > 0 ? { flagged: true, terms: guard.flags, reviewed: false } : undefined,
   });
   if ("error" in result && result.error) return { error: result.error };
 
@@ -89,12 +94,16 @@ export async function makeOfferAction(
     };
   }
 
+  const guard = guardContent({ message: parsed.data.message ?? "" });
+  if ("error" in guard) return { error: guard.error };
+
   const result = await makeOffer({
     postId,
     providerUid: profile.uid,
     providerName: profile.fullName,
     amount: parsed.data.amount,
     message: parsed.data.message ?? "",
+    moderation: guard.flags.length > 0 ? { flagged: true, terms: guard.flags, reviewed: false } : undefined,
   });
   if ("error" in result && result.error) return { error: result.error };
 

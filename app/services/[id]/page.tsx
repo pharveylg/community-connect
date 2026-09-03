@@ -9,6 +9,7 @@ import { LEAD_TIME_LABELS, RATE_TYPE_LABELS, type RateType } from "@/lib/catalog
 import { BlurFade } from "@/components/mp/blur-fade";
 import { AnimatedNumber } from "@/components/mp/animated-number";
 import { RequestBookingForm } from "@/app/(app)/seeker/services/[id]/request-booking-form";
+import { ReportContent } from "@/components/report-content";
 
 type PageProps = { params: Promise<{ id: string }> };
 
@@ -151,6 +152,16 @@ export default async function PublicServicePage({ params }: PageProps) {
           Community Connect never holds your money. Agree on the price before the
           work starts.
         </p>
+        {uid && uid !== service.providerUid && (
+          <div className="mt-3">
+            <ReportContent
+              targetType="listing"
+              targetId={service.id}
+              back={nextPath}
+              label="Report this listing"
+            />
+          </div>
+        )}
       </BlurFade>
     </div>
   );

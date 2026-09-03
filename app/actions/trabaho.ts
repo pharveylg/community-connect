@@ -6,6 +6,7 @@ import { getCurrentProfile } from "@/lib/dal";
 import { getProfile } from "@/lib/firestore";
 import { effectiveVerification } from "@/lib/verifications";
 import { JobAdSchema, JobAdInterestSchema } from "@/lib/validation";
+import { guardContent } from "@/lib/content-guard";
 import {
   createJobAd,
   getJobAd,
@@ -13,7 +14,6 @@ import {
   upsertInterest,
   withdrawInterest,
   decideInterest,
-  reportAd,
 } from "@/lib/trabaho";
 
 const CARE_CATEGORIES = new Set(["kasambahay-yaya", "househelp"]);
@@ -38,6 +38,12 @@ export async function createJobAdAction(input: unknown) {
   if (data.salaryMin != null && data.salaryMax != null && data.salaryMax < data.salaryMin) {
     return { error: "Salary range: maximum can't be lower than the minimum." };
   }
+  const guard = guardContent({
+    title: data.title,
+    details: data.description ?? "",
+    schedule: data.schedule ?? "",
+  });
+  if ("error" in guard) return { error: guard.error };
   if ((data.salaryMin != null) !== (data.salaryPeriod != null)) {
     return { error: "If you show a salary, pick per day / week / month." };
   }
@@ -63,6 +69,7 @@ export async function createJobAdAction(input: unknown) {
     salaryPeriod: data.salaryPeriod ?? null,
     barangay: data.barangay,
     city: data.city,
+    moderation: guard.flags.length > 0 ? { flagged: true, terms: guard.flags, reviewed: false } : undefined,
   });
   if ("error" in result && result.error) return { error: result.error };
 
@@ -92,6 +99,8 @@ export async function expressInterestAction(adId: string, input: unknown) {
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Please check your message." };
   }
+  const guard = guardContent({ message: parsed.data.message ?? "" });
+  if ("error" in guard) return { error: guard.error };
   const profile = await getCurrentProfile();
   if (profile.role === "admin") {
     return { error: "Admins can't apply for jobs." };
@@ -102,7 +111,8 @@ export async function expressInterestAction(adId: string, input: unknown) {
   const result = await upsertInterest(
     ad,
     { uid: profile.uid, name: profile.fullName },
-    parsed.data.message ?? ""
+    parsed.data.message ?? "",
+    guard.flags.length > 0 ? { flagged: true, terms: guard.flags, reviewed: false } : undefined
   );
   if ("error" in result && result.error) return { error: result.error };
 
@@ -145,16 +155,3 @@ export async function decideInterestAction(formData: FormData) {
   redirect(`/trabaho/my?${decision}=1`);
 }
 
-export async function reportAdAction(formData: FormData) {
-  const adId = String(formData.get("adId") ?? "");
-  const reason = String(formData.get("reason") ?? "").trim().slice(0, 300);
-  const profile = await getCurrentProfile();
-  if (!reason) {
-    redirect(`/trabaho/${adId}?error=${encodeURIComponent("Tell us briefly what's wrong.")}`);
-  }
-  const result = await reportAd(adId, { uid: profile.uid, name: profile.fullName }, reason);
-  if ("error" in result && result.error) {
-    redirect(`/trabaho/${adId}?error=${encodeURIComponent(result.error)}`);
-  }
-  redirect(`/trabaho/${adId}?reported=1`);
-}

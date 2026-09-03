@@ -104,6 +104,7 @@ export async function createJobPost(input: {
   description: string;
   categorySlug: CategorySlug;
   needsPro?: boolean;
+  moderation?: { flagged: boolean; terms: string[]; reviewed: boolean };
   barangay: string;
   city: string;
   whenNeeded: string;
@@ -170,6 +171,7 @@ export async function makeOffer(input: {
   providerName: string;
   amount: number;
   message: string;
+  moderation?: { flagged: boolean; terms: string[]; reviewed: boolean };
 }): Promise<{ ok: true } | { error: string }> {
   const db = getAdminDb();
   const offerRef = db.collection("job_offers").doc(offerId(input.postId, input.providerUid));

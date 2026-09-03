@@ -9,6 +9,7 @@ import {
   type TopUpMethod,
 } from "@/lib/catalog";
 import { BlurFade } from "@/components/mp/blur-fade";
+import { BackLink } from "@/components/back-link";
 import { AnimatedNumber } from "@/components/mp/animated-number";
 import { TopUpForm } from "./topup-form";
 
@@ -39,6 +40,7 @@ export default async function CreditsPage({
 
   return (
     <div className="mx-auto w-full max-w-sm">
+      <BackLink href="/provider" label="Home" />
       <h1 className="mb-1 text-[24px] font-semibold tracking-tight">Credits</h1>
       <p className="mb-5 text-sm" style={{ color: "var(--c-text-2)" }}>
         Credits pay for accepts beyond your {FREE_MONTHLY_ACCEPTS} free each month.

@@ -10,6 +10,12 @@ import {
 import { decideVerificationAction } from "@/app/actions/verifications";
 import { VERIFICATION_ID_LABELS, type VerificationIdType } from "@/lib/catalog";
 import { decideTopUpAction } from "@/app/actions/wallet";
+import { adminModerateAction } from "@/app/actions/moderation";
+import {
+  listUnresolvedReports,
+  listFlaggedContent,
+  groupReportsByTarget,
+} from "@/lib/moderation";
 import { TOPUP_METHOD_LABELS, formatPeso, type TopUpMethod } from "@/lib/catalog";
 import { BlurFade } from "@/components/mp/blur-fade";
 import { AnimatedNumber } from "@/components/mp/animated-number";
@@ -35,13 +41,17 @@ export default async function AdminHomePage({
         ? params.error
         : null;
 
-  const [pendingTopUps, users, events, listings, pendingVerifications] = await Promise.all([
-    listPendingTopUps(),
-    listProfiles(50),
-    listAllWalletEvents(15),
-    browseServices(),
-    listPendingVerifications(),
-  ]);
+  const [pendingTopUps, users, events, listings, pendingVerifications, unresolvedReports, flagged] =
+    await Promise.all([
+      listPendingTopUps(),
+      listProfiles(50),
+      listAllWalletEvents(15),
+      browseServices(),
+      listPendingVerifications(),
+      listUnresolvedReports(),
+      listFlaggedContent(),
+    ]);
+  const reportedTargets = groupReportsByTarget(unresolvedReports);
   const verificationFiles = await Promise.all(
     pendingVerifications.map(async (v) => ({
       requestId: v.id,
@@ -124,6 +134,109 @@ export default async function AdminHomePage({
           </BlurFade>
         ))}
       </div>
+
+      {/* Moderation */}
+      <section className="mb-8">
+        <h2 className="mb-3 text-sm font-semibold">
+          🚨 Moderation
+          {reportedTargets.length + flagged.length > 0 && (
+            <span className="cc-num ml-1.5" style={{ color: "var(--c-danger)" }}>
+              ({reportedTargets.length + flagged.length})
+            </span>
+          )}
+        </h2>
+        <div className="flex flex-col gap-2.5">
+          {reportedTargets.length === 0 && flagged.length === 0 && (
+            <div className="cc-card text-xs" style={{ color: "var(--c-text-2)" }}>
+              Nothing reported or flagged — all clear.
+            </div>
+          )}
+
+          {reportedTargets.map((t) => (
+            <div key={t.key} className="cc-card">
+              <div className="mb-1 flex flex-wrap items-center gap-2">
+                <span className="text-[13px] font-semibold">{t.title}</span>
+                <span className="cc-badge" style={{ background: "#f1f3f6", color: "var(--c-text-2)" }}>
+                  {t.targetType.replace("_", " ")}
+                </span>
+                <span className="cc-badge" style={{ background: "var(--c-danger-light)", color: "var(--c-danger)" }}>
+                  {t.count} report{t.count === 1 ? "" : "s"}
+                </span>
+                {t.hidden && (
+                  <span className="cc-badge" style={{ background: "var(--c-danger-light)", color: "var(--c-danger)" }}>
+                    auto-hidden
+                  </span>
+                )}
+              </div>
+              {t.text && (
+                <p className="mb-1.5 text-xs leading-relaxed" style={{ color: "var(--c-text-2)" }}>
+                  {t.text.slice(0, 220)}
+                </p>
+              )}
+              <ul className="mb-2 ml-4 list-disc text-[11px]" style={{ color: "var(--c-text-3)" }}>
+                {t.reasons.slice(0, 3).map((r, i) => (
+                  <li key={i}>{r}</li>
+                ))}
+              </ul>
+              <div className="flex gap-2">
+                <form action={adminModerateAction}>
+                  <input type="hidden" name="op" value="remove" />
+                  <input type="hidden" name="targetType" value={t.targetType} />
+                  <input type="hidden" name="targetId" value={t.targetId} />
+                  <button type="submit" className="cc-btn cc-btn-primary" style={{ width: "auto", padding: "0 14px", minHeight: 34, fontSize: 12 }}>
+                    Remove
+                  </button>
+                </form>
+                <form action={adminModerateAction}>
+                  <input type="hidden" name="op" value="keep" />
+                  <input type="hidden" name="targetType" value={t.targetType} />
+                  <input type="hidden" name="targetId" value={t.targetId} />
+                  <button type="submit" className="cc-btn cc-btn-ghost" style={{ width: "auto", padding: "0 14px", minHeight: 34, fontSize: 12 }}>
+                    Keep (false alarm)
+                  </button>
+                </form>
+              </div>
+            </div>
+          ))}
+
+          {flagged.map((f) => (
+            <div key={`${f.collection}-${f.id}`} className="cc-card">
+              <div className="mb-1 flex flex-wrap items-center gap-2">
+                <span className="text-[13px] font-semibold">{f.title}</span>
+                <span className="cc-badge" style={{ background: "#fdf3dc", color: "#8a5a00" }}>
+                  flagged: {f.tags.join(", ") || "review"}
+                </span>
+                <span className="cc-badge" style={{ background: "#f1f3f6", color: "var(--c-text-2)" }}>
+                  {f.collection}
+                </span>
+              </div>
+              {f.text && (
+                <p className="mb-2 text-xs leading-relaxed" style={{ color: "var(--c-text-2)" }}>
+                  {f.text.slice(0, 220)}
+                </p>
+              )}
+              <div className="flex gap-2">
+                <form action={adminModerateAction}>
+                  <input type="hidden" name="op" value="remove-flagged" />
+                  <input type="hidden" name="collection" value={f.collection} />
+                  <input type="hidden" name="flaggedId" value={f.id} />
+                  <button type="submit" className="cc-btn cc-btn-primary" style={{ width: "auto", padding: "0 14px", minHeight: 34, fontSize: 12 }}>
+                    Remove
+                  </button>
+                </form>
+                <form action={adminModerateAction}>
+                  <input type="hidden" name="op" value="reviewed" />
+                  <input type="hidden" name="collection" value={f.collection} />
+                  <input type="hidden" name="flaggedId" value={f.id} />
+                  <button type="submit" className="cc-btn cc-btn-ghost" style={{ width: "auto", padding: "0 14px", minHeight: 34, fontSize: 12 }}>
+                    Looks fine
+                  </button>
+                </form>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* Pending top-ups */}
       <BlurFade delay={0.12}>

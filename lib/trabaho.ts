@@ -130,6 +130,7 @@ export type CreateJobAdInput = {
   salaryPeriod: SalaryPeriod | null;
   barangay: string;
   city: string;
+  moderation?: { flagged: boolean; terms: string[]; reviewed: boolean };
 };
 
 export async function createJobAd(
@@ -199,7 +200,8 @@ export async function getInterest(
 export async function upsertInterest(
   ad: JobAd,
   worker: { uid: string; name: string },
-  message: string
+  message: string,
+  moderation?: { flagged: boolean; terms: string[]; reviewed: boolean }
 ): Promise<{ ok: true } | { error: string }> {
   if (ad.posterUid === worker.uid) {
     return { error: "This is your own ad." } as const;
@@ -224,6 +226,7 @@ export async function upsertInterest(
     posterMobile: null,
     workerMobile: null,
     shortlistedAt: null,
+    ...(moderation ? { moderation } : {}),
     createdAt: FieldValue.serverTimestamp(),
   });
   return { ok: true as const };
@@ -289,21 +292,3 @@ export async function listMyInterests(uid: string): Promise<JobAdInterest[]> {
     .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
 }
 
-export async function reportAd(
-  adId: string,
-  reporter: { uid: string; name: string },
-  reason: string
-): Promise<{ ok: true } | { error: string }> {
-  const ad = await getJobAd(adId);
-  if (!ad) return { error: "Ad not found." } as const;
-  await getAdminDb().collection("job_ad_reports").add({
-    adId,
-    adTitle: ad.title,
-    reporterUid: reporter.uid,
-    reporterName: reporter.name,
-    reason,
-    resolved: false,
-    createdAt: FieldValue.serverTimestamp(),
-  });
-  return { ok: true as const };
-}

@@ -3,6 +3,7 @@ import { listMyVerifications } from "@/lib/verifications";
 import { effectiveVerification } from "@/lib/verifications";
 import { VERIFICATION_ID_LABELS, type VerificationIdType } from "@/lib/catalog";
 import { BlurFade } from "@/components/mp/blur-fade";
+import { BackLink } from "@/components/back-link";
 import { VerificationForm } from "./verification-form";
 
 function formatDate(d: Date | null) {
@@ -22,6 +23,7 @@ export default async function VerificationPage({
 
   return (
     <div className="mx-auto w-full max-w-sm">
+      <BackLink href="/" label="Home" />
       <BlurFade delay={0}>
         <h1 className="mb-1 text-[24px] font-semibold tracking-tight">ID verification</h1>
         <p className="mb-6 text-sm leading-relaxed" style={{ color: "var(--c-text-2)" }}>

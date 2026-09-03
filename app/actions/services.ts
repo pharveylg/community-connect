@@ -16,6 +16,7 @@ import {
   getCategory,
 } from "@/lib/catalog";
 import type { ServiceListingInput } from "@/lib/validation";
+import { guardContent } from "@/lib/content-guard";
 
 export async function createServiceAction(input: ServiceListingInput) {
   const parsed = ServiceListingSchema.safeParse(input);
@@ -27,6 +28,11 @@ export async function createServiceAction(input: ServiceListingInput) {
   if (profile.role !== "provider") {
     return { error: "Switch to a provider account to list services." };
   }
+
+  const guard = guardContent({ title: parsed.data.title, details: parsed.data.description ?? "" });
+  if ("error" in guard) return { error: guard.error };
+  const moderation =
+    guard.flags.length > 0 ? { flagged: true, terms: guard.flags, reviewed: false } : undefined;
 
   const category = getCategory(parsed.data.categorySlug);
   if (!category) return { error: "Please choose a service category." };
@@ -47,6 +53,7 @@ export async function createServiceAction(input: ServiceListingInput) {
     categoryLabel: category.label,
     custom: category.slug === CUSTOM_CATEGORY,
     title: parsed.data.title,
+    moderation,
     description: parsed.data.description,
     rateType: parsed.data.rateType,
     rateAmount: parsed.data.rateAmount,

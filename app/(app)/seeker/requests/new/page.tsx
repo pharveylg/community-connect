@@ -1,11 +1,13 @@
 import { getCurrentProfile } from "@/lib/dal";
 import { BlurFade } from "@/components/mp/blur-fade";
+import { BackLink } from "@/components/back-link";
 import { NewJobPostForm } from "./new-job-post-form";
 
 export default async function NewJobPostPage() {
   const profile = await getCurrentProfile();
   return (
     <div className="mx-auto w-full max-w-sm">
+      <BackLink href="/seeker/requests" label="My requests" />
       <BlurFade delay={0}>
         <h1 className="mb-1 text-[24px] font-semibold tracking-tight">What do you need?</h1>
         <p className="mb-6 text-sm leading-relaxed" style={{ color: "var(--c-text-2)" }}>

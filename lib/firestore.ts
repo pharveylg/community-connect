@@ -249,6 +249,7 @@ export async function setServiceListingActive(id: string, active: boolean) {
 
 export type ServiceListingInputData = {
   providerUid: string;
+  moderation?: { flagged: boolean; terms: string[]; reviewed: boolean };
   providerName: string;
   categorySlug: CategorySlug;
   categoryLabel: string;

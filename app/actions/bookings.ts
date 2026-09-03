@@ -12,6 +12,7 @@ import {
   vouchForProvider,
 } from "@/lib/bookings";
 import { BookingRequestSchema } from "@/lib/validation";
+import { guardContent } from "@/lib/content-guard";
 import type { BookingRequestInput } from "@/lib/validation";
 
 export async function createBookingAction(
@@ -27,6 +28,14 @@ export async function createBookingAction(
   if (profile.role === "provider") {
     return { error: "You're registered as a provider — book with a seeker account." };
   }
+
+  // Booking messages are seen BEFORE the provider accepts — same scam rules.
+  // Numbers are fine here (legit coordination once booking is in flight).
+  const guard = guardContent(
+    { message: parsed.data.message ?? "" },
+    { phoneOk: true }
+  );
+  if ("error" in guard) return { error: guard.error };
 
   const result = await createBooking(
     { uid: profile.uid, fullName: profile.fullName },

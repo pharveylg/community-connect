@@ -18,6 +18,7 @@ import {
   withdrawInterestAction,
 } from "@/app/actions/trabaho";
 import { BlurFade } from "@/components/mp/blur-fade";
+import { BackLink } from "@/components/back-link";
 
 const AD_STYLES: Record<string, { bg: string; fg: string; label: string }> = {
   open: { bg: "var(--c-accent-light)", fg: "var(--c-accent)", label: "Open" },
@@ -52,6 +53,7 @@ export default async function MyTrabahoPage({
   if (!uid) {
     return (
       <div className="mx-auto w-full max-w-sm">
+      <BackLink href="/trabaho" label="Trabaho" />
         <div className="cc-card">
           <div className="mb-2 text-sm font-semibold">My ads &amp; applications</div>
           <p className="mb-3 text-xs" style={{ color: "var(--c-text-2)" }}>

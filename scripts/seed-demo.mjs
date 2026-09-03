@@ -65,7 +65,7 @@ async function cleanOnly() {
   await clearSeeds("job_offers");
   await clearSeeds("job_ads");
   await clearSeeds("job_ad_interests");
-  await clearSeeds("job_ad_reports");
+  await clearSeeds("content_reports");
   await clearSeeds("verification_id_hashes");
   await clearSeeds("audit_log");
   const seedProfiles = await db.collection("profiles").where("seed", "==", true).get();

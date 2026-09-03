@@ -5,6 +5,8 @@ import { effectiveVerification } from "@/lib/verifications";
 import { allowanceFor } from "@/lib/wallet";
 import { EXTRA_ACCEPT_FEE_PESOS, SERVICE_CATEGORIES, getCategory } from "@/lib/catalog";
 import { BlurFade } from "@/components/mp/blur-fade";
+import { BackLink } from "@/components/back-link";
+import { ReportContent } from "@/components/report-content";
 import { OfferForm } from "./offer-form";
 
 const OFFER_STATUS: Record<string, { bg: string; fg: string; label: string }> = {
@@ -53,6 +55,7 @@ export default async function JobBoardPage({
 
   return (
     <div className="mx-auto w-full max-w-sm">
+      <BackLink href="/provider" label="Home" />
       <BlurFade delay={0}>
         <h1 className="mb-1 text-[24px] font-semibold tracking-tight">Open jobs near you</h1>
         <p className="mb-5 text-sm leading-relaxed" style={{ color: "var(--c-text-2)" }}>
@@ -212,6 +215,7 @@ function JobPostCard({
         )}
       </div>
 
+      <ReportContent targetType="job_post" targetId={post.id} back="/provider/jobs" label="Report post" />
       {alreadyOffered ? (
         <div className="text-xs" style={{ color: "var(--c-text-3)" }}>
           You already made an offer on this — see My offers below.

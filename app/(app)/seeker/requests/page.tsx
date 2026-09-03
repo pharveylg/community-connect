@@ -6,6 +6,8 @@ import { trustBadgeStyle, trustTier, trustSummaryLine } from "@/lib/trust";
 import { effectiveVerification } from "@/lib/verifications";
 import { acceptOfferAction, closeJobPostAction } from "@/app/actions/jobboard";
 import { BlurFade } from "@/components/mp/blur-fade";
+import { BackLink } from "@/components/back-link";
+import { ReportContent } from "@/components/report-content";
 
 const STATUS_STYLES: Record<JobPost["status"], { bg: string; fg: string; label: string }> = {
   open: { bg: "var(--c-success-light)", fg: "var(--c-success)", label: "Open" },
@@ -47,6 +49,7 @@ export default async function MyRequestsPage({
 
   return (
     <div className="mx-auto w-full max-w-sm">
+      <BackLink href="/seeker" label="Home" />
       <BlurFade delay={0}>
         <h1 className="mb-1 text-[24px] font-semibold tracking-tight">My requests</h1>
         <p className="mb-5 text-sm leading-relaxed" style={{ color: "var(--c-text-2)" }}>
@@ -174,6 +177,12 @@ export default async function MyRequestsPage({
                               Accept {offer.providerName.split(" ")[0]}&apos;s offer
                             </button>
                           </form>
+                          <ReportContent
+                            targetType="job_offer"
+                            targetId={offer.id}
+                            back="/seeker/requests"
+                            label="Report offer"
+                          />
                         </div>
                       );
                     })}

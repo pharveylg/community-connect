@@ -43,6 +43,9 @@ export function InterestForm({ adId }: { adId: string }) {
         The employer will see your name and Community Connect profile. Your
         mobile number is shared only if they shortlist you.
       </p>
+      <p className="text-[11px] leading-relaxed" style={{ color: "var(--c-text-3)" }}>
+        Messages are reviewed. Illegal content is reported to authorities.
+      </p>
       <button type="submit" className="cc-btn cc-btn-primary" disabled={pending}>
         {pending ? "Sending…" : "Express interest — free"}
       </button>

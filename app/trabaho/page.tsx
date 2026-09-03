@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { WORK_CATEGORIES, getWorkCategory } from "@/lib/catalog";
 import { listOpenAds, salaryLine } from "@/lib/trabaho";
 import { BlurFade } from "@/components/mp/blur-fade";
+import { BackLink } from "@/components/back-link";
 
 export const metadata: Metadata = {
   title: "Trabaho — local hiring · Community Connect",
@@ -35,6 +36,7 @@ export default async function TrabahoPage({
 
   return (
     <div className="mx-auto w-full max-w-sm">
+      <BackLink href="/" label="Home" />
       <BlurFade delay={0}>
         <h1 className="mb-1 text-[24px] font-semibold tracking-tight">💼 Trabaho</h1>
         <p className="mb-1 text-sm leading-relaxed" style={{ color: "var(--c-text-2)" }}>
