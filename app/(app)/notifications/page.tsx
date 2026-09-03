@@ -31,7 +31,7 @@ export default async function NotificationsPage() {
   ]);
 
   return (
-    <div className="mx-auto w-full max-w-sm md:max-w-md lg:max-w-2xl">
+    <div className="mx-auto w-full max-w-sm md:max-w-md lg:max-w-2xl xl:max-w-3xl">
       <BackLink href={roleHome(profile.role ?? "seeker")} label="Home" />
 
       <BlurFade delay={0}>

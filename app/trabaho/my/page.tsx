@@ -101,7 +101,7 @@ export default async function MyTrabahoPage({
                 : null;
 
   return (
-    <div className="mx-auto w-full max-w-sm md:max-w-2xl lg:max-w-3xl">
+    <div className="mx-auto w-full max-w-sm md:max-w-2xl lg:max-w-5xl xl:max-w-7xl">
       <BlurFade delay={0}>
         <h1 className="mb-1 text-[24px] font-semibold tracking-tight">My ads &amp; applications</h1>
         <p className="mb-5 text-sm" style={{ color: "var(--c-text-2)" }}>
@@ -127,7 +127,7 @@ export default async function MyTrabahoPage({
         </div>
       </BlurFade>
 
-      <div className="mb-8 grid grid-cols-1 gap-3 md:grid-cols-2">
+      <div className="mb-8 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         {myAds.length === 0 && (
           <div className="cc-card text-center text-xs" style={{ color: "var(--c-text-2)" }}>
             No job ads yet — hiring? Posting is free for households and businesses.
@@ -251,7 +251,7 @@ export default async function MyTrabahoPage({
       <BlurFade delay={0.1}>
         <h2 className="mb-2 text-sm font-semibold">Jobs I applied to</h2>
       </BlurFade>
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         {myInterests.length === 0 && (
           <div className="cc-card text-center text-xs" style={{ color: "var(--c-text-2)" }}>
             You haven&apos;t applied to any jobs —{" "}

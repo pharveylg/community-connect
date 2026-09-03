@@ -81,7 +81,7 @@ export default async function SeekerHomePage({
     : services;
 
   return (
-    <div className="mx-auto w-full max-w-sm md:max-w-2xl lg:max-w-4xl">
+    <div className="mx-auto w-full max-w-sm md:max-w-2xl lg:max-w-5xl xl:max-w-7xl">
       <BlurFade delay={0}>
         <p className="mb-1 text-xs font-medium" style={{ color: "var(--c-text-2)" }}>
           Good morning 👋 {profile.bookingFor === "dependent" ? "· booking for a family member" : ""}
@@ -244,7 +244,7 @@ export default async function SeekerHomePage({
         </div>
       </BlurFade>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {services.length === 0 && (
           <BlurFade delay={0.15}>
             <div className="cc-card text-center">

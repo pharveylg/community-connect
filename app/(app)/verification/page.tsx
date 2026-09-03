@@ -22,7 +22,7 @@ export default async function VerificationPage({
   const submitted = typeof (await searchParams).submitted === "string";
 
   return (
-    <div className="mx-auto w-full max-w-sm md:max-w-md">
+    <div className="mx-auto w-full max-w-sm md:max-w-md lg:max-w-lg">
       <BackLink href="/" label="Home" />
       <BlurFade delay={0}>
         <h1 className="mb-1 text-[24px] font-semibold tracking-tight">ID verification</h1>

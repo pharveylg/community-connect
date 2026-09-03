@@ -87,7 +87,7 @@ export function PostJobAdForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mx-auto flex w-full max-w-sm md:max-w-md flex-col gap-4">
+    <form onSubmit={handleSubmit} className="mx-auto flex w-full max-w-sm md:max-w-md lg:max-w-lg flex-col gap-4">
       <div className="flex items-center gap-3">
         <div
           className="flex h-11 w-11 items-center justify-center rounded-[14px] text-xl"

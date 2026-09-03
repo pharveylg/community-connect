@@ -80,5 +80,5 @@ export async function decideVerificationAction(formData: FormData) {
   if ("error" in result && result.error) {
     redirect(`/admin?error=${encodeURIComponent(result.error)}`);
   }
-  redirect(`/admin?verification=${decision}`);
+  redirect(`/admin?verification=${decision}&tab=verifications`);
 }

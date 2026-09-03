@@ -54,7 +54,7 @@ export default async function JobBoardPage({
   const canOffer = verified && (allowance.freeRemaining > 0 || profile.credits >= EXTRA_ACCEPT_FEE_PESOS);
 
   return (
-    <div className="mx-auto w-full max-w-sm md:max-w-2xl lg:max-w-4xl">
+    <div className="mx-auto w-full max-w-sm md:max-w-2xl lg:max-w-5xl xl:max-w-7xl">
       <BackLink href="/provider" label="Home" />
       <BlurFade delay={0}>
         <h1 className="mb-1 text-[24px] font-semibold tracking-tight">Open jobs near you</h1>
@@ -112,7 +112,7 @@ export default async function JobBoardPage({
         </div>
       </BlurFade>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
         {posts.length === 0 && (
           <BlurFade delay={0.1}>
             <div className="cc-card text-center">

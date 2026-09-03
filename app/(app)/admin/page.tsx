@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { getCurrentProfile } from "@/lib/dal";
 import { browseServices, listProfiles } from "@/lib/firestore";
 import { listAllWalletEvents, listPendingTopUps } from "@/lib/wallet";
@@ -52,6 +53,16 @@ export default async function AdminHomePage({
       listFlaggedContent(),
     ]);
   const reportedTargets = groupReportsByTarget(unresolvedReports);
+  const TABS = [
+    { id: "moderation", label: "🚨 Moderation", count: reportedTargets.length + flagged.length },
+    { id: "verifications", label: "🪪 ID verifications", count: pendingVerifications.length },
+    { id: "topups", label: "💳 Top-up approvals", count: pendingTopUps.length },
+    { id: "ledger", label: "📚 Platform ledger", count: 0 },
+    { id: "users", label: "👥 Users", count: 0 },
+  ] as const;
+  type TabId = (typeof TABS)[number]["id"];
+  const tab: TabId = TABS.some((t) => t.id === params.tab) ? (params.tab as TabId) : "moderation";
+
   const verificationFiles = await Promise.all(
     pendingVerifications.map(async (v) => ({
       requestId: v.id,
@@ -63,7 +74,7 @@ export default async function AdminHomePage({
   const providerCount = users.filter((u) => u.role === "provider").length;
 
   return (
-    <div className="mx-auto w-full max-w-md lg:max-w-4xl">
+    <div className="mx-auto w-full max-w-md lg:max-w-4xl xl:max-w-7xl">
       <BlurFade delay={0}>
         <div className="mb-1 flex items-center gap-2">
           <span className="text-xs font-medium" style={{ color: "var(--c-text-2)" }}>
@@ -107,34 +118,26 @@ export default async function AdminHomePage({
         ))}
       </div>
 
-      {/* ID verifications */}
-      <BlurFade delay={0.11}>
-        <h2 className="mb-2.5 text-sm font-semibold">
-          ID verifications{" "}
-          {pendingVerifications.length > 0 && (
-            <span className="cc-badge ml-1" style={{ background: "var(--c-accent-light)", color: "var(--c-accent)" }}>
-              {pendingVerifications.length} pending
-            </span>
-          )}
-        </h2>
-      </BlurFade>
-      <div className="mb-5 flex flex-col gap-3">
-        {pendingVerifications.length === 0 && (
-          <BlurFade delay={0.13}>
-            <div className="cc-card text-center text-xs" style={{ color: "var(--c-text-2)" }}>
-              No pending verification requests.
-            </div>
-          </BlurFade>
-        )}
-        {pendingVerifications.map((v, i) => (
-          <BlurFade key={v.id} delay={0.13 + i * 0.07}>
-            <div className="cc-card">
-              <VerificationReviewCard v={v} files={filesFor(v.id)} />
-            </div>
-          </BlurFade>
+      {/* Tabs */}
+      <div className="mb-5 flex flex-wrap gap-1.5">
+        {TABS.map((t) => (
+          <Link
+            key={t.id}
+            href={"/admin?tab=" + t.id}
+            className={"cc-chip " + (tab === t.id ? "cc-chip-active" : "")}
+          >
+            {t.label}
+            {t.count > 0 && (
+              <span className="cc-num ml-1 rounded-full px-1.5 text-[10.5px] font-bold text-white" style={{ background: "var(--c-danger)" }}>
+                {t.count}
+              </span>
+            )}
+          </Link>
         ))}
       </div>
 
+      {tab === "moderation" && (
+        <>
       {/* Moderation */}
       <section className="mb-8">
         <h2 className="mb-3 text-sm font-semibold">
@@ -238,6 +241,44 @@ export default async function AdminHomePage({
         </div>
       </section>
 
+      </>
+      )}
+
+      {tab === "verifications" && (
+        <>
+      {/* ID verifications */}
+      <BlurFade delay={0.11}>
+        <h2 className="mb-2.5 text-sm font-semibold">
+          ID verifications{" "}
+          {pendingVerifications.length > 0 && (
+            <span className="cc-badge ml-1" style={{ background: "var(--c-accent-light)", color: "var(--c-accent)" }}>
+              {pendingVerifications.length} pending
+            </span>
+          )}
+        </h2>
+      </BlurFade>
+      <div className="mb-5 flex flex-col gap-3">
+        {pendingVerifications.length === 0 && (
+          <BlurFade delay={0.13}>
+            <div className="cc-card text-center text-xs" style={{ color: "var(--c-text-2)" }}>
+              No pending verification requests.
+            </div>
+          </BlurFade>
+        )}
+        {pendingVerifications.map((v, i) => (
+          <BlurFade key={v.id} delay={0.13 + i * 0.07}>
+            <div className="cc-card">
+              <VerificationReviewCard v={v} files={filesFor(v.id)} />
+            </div>
+          </BlurFade>
+        ))}
+      </div>
+
+      </>
+      )}
+
+      {tab === "topups" && (
+        <>
       {/* Pending top-ups */}
       <BlurFade delay={0.12}>
         <h2 className="mb-2.5 text-sm font-semibold">
@@ -304,6 +345,11 @@ export default async function AdminHomePage({
         ))}
       </div>
 
+      </>
+      )}
+
+      {tab === "users" && (
+        <>
       {/* Users */}
       <BlurFade delay={0.12}>
         <h2 className="mb-2.5 text-sm font-semibold">Recent users</h2>
@@ -355,6 +401,11 @@ export default async function AdminHomePage({
         </table>
       </div>
 
+      </>
+      )}
+
+      {tab === "ledger" && (
+        <>
       {/* Ledger */}
       <BlurFade delay={0.12}>
         <h2 className="mb-2.5 text-sm font-semibold">Platform ledger (latest)</h2>
@@ -389,6 +440,8 @@ export default async function AdminHomePage({
           </BlurFade>
         ))}
       </div>
+      </>
+      )}
     </div>
   );
 }

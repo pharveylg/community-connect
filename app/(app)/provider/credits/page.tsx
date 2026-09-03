@@ -39,7 +39,7 @@ export default async function CreditsPage({
   ]);
 
   return (
-    <div className="mx-auto w-full max-w-sm md:max-w-md">
+    <div className="mx-auto w-full max-w-sm md:max-w-md lg:max-w-lg">
       <BackLink href="/provider" label="Home" />
       <h1 className="mb-1 text-[24px] font-semibold tracking-tight">Credits</h1>
       <p className="mb-5 text-sm" style={{ color: "var(--c-text-2)" }}>

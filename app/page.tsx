@@ -84,7 +84,8 @@ export default async function Home({
         style={{ background: "radial-gradient(circle, rgba(14,122,95,.14), transparent 70%)" }}
       />
 
-      <div className="relative mx-auto w-full max-w-md px-5 pt-16 lg:max-w-5xl">
+      <div className="relative mx-auto w-full max-w-md px-5 pt-16 xl:max-w-6xl 2xl:max-w-7xl">
+        <div className="lg:max-w-md">
         {/* Hero */}
         <BlurFade delay={0} duration={0.5}>
           <div
@@ -121,6 +122,7 @@ export default async function Home({
             </Link>
           </div>
         </BlurFade>
+        </div>
 
         {/* Public marketplace */}
         <BlurFade delay={0.3} inView>
@@ -187,7 +189,7 @@ export default async function Home({
           </div>
         </BlurFade>
 
-        <div className="mb-10 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mb-10 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {visibleServices.length === 0 && (
             <BlurFade delay={0.34} inView>
               <div className="cc-card text-center">
@@ -286,7 +288,7 @@ export default async function Home({
         </p>
       </BlurFade>
 
-      <div className="relative mx-auto w-full max-w-md px-5 pb-10 lg:max-w-5xl">
+      <div className="relative mx-auto w-full max-w-md px-5 pb-10 xl:max-w-6xl 2xl:max-w-7xl">
         {/* How it works */}
         <BlurFade delay={0.1} inView>
           <h2 className="mt-12 mb-5 text-[22px] font-semibold tracking-tight">How it works</h2>

@@ -43,7 +43,7 @@ export default async function TrabahoAdPage({
   const nextPath = `/trabaho/${ad.id}`;
 
   return (
-    <div className="mx-auto w-full max-w-sm md:max-w-md lg:max-w-4xl">
+    <div className="mx-auto w-full max-w-sm md:max-w-md xl:max-w-6xl">
       <BlurFade delay={0}>
         <Link
           href="/trabaho"

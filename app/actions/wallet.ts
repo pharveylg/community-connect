@@ -43,5 +43,5 @@ export async function decideTopUpAction(formData: FormData) {
   revalidatePath("/admin");
   revalidatePath("/provider/credits");
   if ("error" in result && result.error) redirect(`/admin?error=${encodeURIComponent(result.error)}`);
-  redirect(`/admin?decided=${decision}`);
+  redirect(`/admin?decided=${decision}&tab=topups`);
 }

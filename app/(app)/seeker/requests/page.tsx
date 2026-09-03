@@ -48,7 +48,7 @@ export default async function MyRequestsPage({
   const trust = await getProviderTrust(providerUids);
 
   return (
-    <div className="mx-auto w-full max-w-sm md:max-w-2xl lg:max-w-4xl">
+    <div className="mx-auto w-full max-w-sm md:max-w-2xl lg:max-w-5xl xl:max-w-7xl">
       <BackLink href="/seeker" label="Home" />
       <BlurFade delay={0}>
         <h1 className="mb-1 text-[24px] font-semibold tracking-tight">My requests</h1>
@@ -75,7 +75,7 @@ export default async function MyRequestsPage({
         </Link>
       </BlurFade>
 
-      <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {posts.length === 0 && (
           <BlurFade delay={0.08}>
             <div className="cc-card text-center">
