@@ -30,6 +30,7 @@ export type JobPost = {
   whenNeeded: string; // ISO date or "flexible"
   budget: number | null; // null = open to quotes
   status: JobPostStatus;
+  removedByModeration: boolean;
   acceptedOfferId: string | null;
   filledBookingId: string | null;
   createdAt: Date | null;
@@ -64,6 +65,7 @@ function postFromSnap(id: string, d: FirebaseFirestore.DocumentData): JobPost {
     description: d.description ?? "",
     categorySlug: d.categorySlug,
     needsPro: d.needsPro === true,
+    removedByModeration: d.moderation?.hiddenAt != null,
     custom: d.custom === true,
     barangay: d.barangay,
     city: d.city,

@@ -52,7 +52,7 @@ export default async function ProviderHomePage({
   const usedPct = Math.round((allowance.used / FREE_MONTHLY_ACCEPTS) * 100);
 
   return (
-    <div className="mx-auto w-full max-w-sm">
+    <div className="mx-auto w-full max-w-sm md:max-w-2xl lg:max-w-4xl">
       <BlurFade delay={0}>
         <p className="mb-1 text-xs font-medium" style={{ color: "var(--c-text-2)" }}>
           Provider dashboard
@@ -352,7 +352,11 @@ export default async function ProviderHomePage({
                       : { background: "var(--c-surface-2)", color: "var(--c-text-2)" }
                   }
                 >
-                  {service.active ? "Active" : "Paused"}
+                  {service.removedByModeration
+                    ? "Removed by moderators"
+                    : service.active
+                      ? "Active"
+                      : "Paused"}
                 </span>
               </div>
               <div className="mb-2 text-[15px] font-semibold cc-num">
@@ -369,7 +373,7 @@ export default async function ProviderHomePage({
                   className="cc-btn cc-btn-secondary"
                   style={{ width: "auto", minHeight: 36, fontSize: 12, padding: "0 12px" }}
                 >
-                  {service.active ? "Pause" : "Resume"}
+                  {service.removedByModeration ? "—" : service.active ? "Pause" : "Resume"}
                 </button>
               </form>
             </div>

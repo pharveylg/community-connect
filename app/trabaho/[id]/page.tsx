@@ -43,7 +43,7 @@ export default async function TrabahoAdPage({
   const nextPath = `/trabaho/${ad.id}`;
 
   return (
-    <div className="mx-auto w-full max-w-sm">
+    <div className="mx-auto w-full max-w-sm md:max-w-md lg:max-w-4xl">
       <BlurFade delay={0}>
         <Link
           href="/trabaho"
@@ -67,131 +67,156 @@ export default async function TrabahoAdPage({
         </BlurFade>
       )}
 
-      <BlurFade delay={0.06}>
-        <div className="mb-1 flex items-start justify-between gap-2">
-          <h1 className="text-[22px] leading-tight font-semibold tracking-tight">{ad.title}</h1>
-          {ad.status !== "open" && (
-            <span className="cc-badge" style={{ background: "#f1f3f6", color: "var(--c-text-2)" }}>
-              {ad.status === "filled" ? "Filled" : "Closed"}
-            </span>
-          )}
-        </div>
-        <div className="mb-2 text-xs" style={{ color: "var(--c-text-2)" }}>
-          {cat?.emoji} {cat?.label} · {ad.posterType === "business" ? "🏪 Small business" : "🏠 Household"} ·{" "}
-          {EMPLOYMENT_LABELS[ad.employmentType] ?? ad.employmentType}
-        </div>
-        <div className="mb-1.5 flex flex-wrap items-center gap-2">
-          <span className="cc-badge" style={{ background: "var(--c-accent-light)", color: "var(--c-accent)" }}>
-            ✅ Posted by {ad.posterName.split(" ")[0]} (ID-verified)
-          </span>
-        </div>
-        <div className="text-xs" style={{ color: "var(--c-text-3)" }}>
-          📍 {ad.barangay}, {ad.city}
-        </div>
-      </BlurFade>
-
-      <BlurFade delay={0.12}>
-        <div className="cc-card mb-3">
-          <div className="mb-2 text-sm font-semibold cc-num">
-            {salaryLine(ad) ?? <span style={{ color: "var(--c-text-3)", fontWeight: 400 }}>Salary not shown — ask the employer</span>}
-          </div>
-          {ad.schedule && (
+      <div className="lg:grid lg:grid-cols-[1fr_360px] lg:items-start lg:gap-5">
+        {/* Left: job details */}
+        <div className="flex flex-col">
+          <BlurFade delay={0.06}>
+            <div className="mb-1 flex items-start justify-between gap-2">
+              <h1 className="text-[22px] leading-tight font-semibold tracking-tight">{ad.title}</h1>
+              {ad.status !== "open" && (
+                <span className="cc-badge" style={{ background: "#f1f3f6", color: "var(--c-text-2)" }}>
+                  {ad.status === "filled" ? "Filled" : "Closed"}
+                </span>
+              )}
+            </div>
             <div className="mb-2 text-xs" style={{ color: "var(--c-text-2)" }}>
-              🗓 {ad.schedule}
+              {cat?.emoji} {cat?.label} · {ad.posterType === "business" ? "🏪 Small business" : "🏠 Household"} ·{" "}
+              {EMPLOYMENT_LABELS[ad.employmentType] ?? ad.employmentType}
             </div>
-          )}
-          {ad.description && (
-            <p className="text-sm leading-relaxed">{ad.description}</p>
-          )}
-        </div>
-      </BlurFade>
+            <div className="mb-1.5 flex flex-wrap items-center gap-2">
+              <span className="cc-badge" style={{ background: "var(--c-accent-light)", color: "var(--c-accent)" }}>
+                ✅ Posted by {ad.posterName.split(" ")[0]} (ID-verified)
+              </span>
+            </div>
+            <div className="text-xs" style={{ color: "var(--c-text-3)" }}>
+              📍 {ad.barangay}, {ad.city}
+            </div>
+          </BlurFade>
 
-      <BlurFade delay={0.18}>
-        {isOwn ? (
-          <div className="cc-card">
-            <div className="mb-1.5 text-sm font-semibold">This is your ad</div>
-            <Link href="/trabaho/my" className="text-xs font-semibold" style={{ color: "var(--c-accent)" }}>
-              Manage applicants →
-            </Link>
-          </div>
-        ) : !fresh || ad.status !== "open" ? (
-          <div className="cc-card text-xs" style={{ color: "var(--c-text-2)" }}>
-            This ad is no longer accepting interest.
-          </div>
-        ) : myInterest ? (
-          <div className="cc-card">
-            <span className="cc-badge" style={{ background: INTEREST_STYLES[myInterest.status]?.bg, color: INTEREST_STYLES[myInterest.status]?.fg }}>
-              {INTEREST_STYLES[myInterest.status]?.label ?? myInterest.status}
-            </span>
-            {myInterest.status === "shortlisted" && (
-              <div className="mt-2.5 text-sm">
-                <div className="mb-0.5 text-xs" style={{ color: "var(--c-text-2)" }}>
-                  You were shortlisted — contact each other:
+          <BlurFade delay={0.12}>
+            <div className="cc-card">
+              {ad.schedule && (
+                <div className="mb-2 text-xs" style={{ color: "var(--c-text-2)" }}>
+                  🗓 {ad.schedule}
                 </div>
-                <div className="font-semibold cc-num">📞 {myInterest.posterMobile}</div>
-              </div>
-            )}
-            {(myInterest.status === "interested" || myInterest.status === "shortlisted") && (
-              <form action={withdrawInterestAction} className="mt-3">
-                <input type="hidden" name="adId" value={ad.id} />
-                <button type="submit" className="cc-btn cc-btn-ghost" style={{ width: "auto", padding: "0 14px", minHeight: 36, fontSize: 12 }}>
-                  Withdraw interest
-                </button>
-              </form>
-            )}
-          </div>
-        ) : !uid ? (
-          <div className="cc-card">
-            <div className="mb-1 text-sm font-semibold">I&apos;m interested</div>
-            <p className="mb-3 text-xs leading-relaxed" style={{ color: "var(--c-text-2)" }}>
-              Create a free account (or log in) to express interest — applying is
-              always free for workers.
-            </p>
-            <div className="flex flex-col gap-2">
-              <Link href={`/register?next=${encodeURIComponent(nextPath)}`} className="cc-btn cc-btn-primary">
-                Sign up — it&apos;s free
-              </Link>
-              <Link href={`/login?next=${encodeURIComponent(nextPath)}`} className="cc-btn cc-btn-secondary">
-                I already have an account
-              </Link>
+              )}
+              <p className="text-sm leading-relaxed">
+                {ad.description || "No extra details — ask the employer when you apply."}
+              </p>
             </div>
-          </div>
-        ) : (
-          <InterestForm adId={ad.id} />
-        )}
-      </BlurFade>
+          </BlurFade>
+        </div>
 
-      <BlurFade delay={0.24}>
-        <p className="mt-4 text-xs leading-relaxed" style={{ color: "var(--c-text-3)" }}>
-          Meet in safe public places first, agree on wages and schedule in
-          writing, and NEVER pay any fee to get a job — legitimate employers
-          don&apos;t charge workers. Kasambahay hires: written contract, minimum
-          wage, SSS/PhilHealth/Pag-IBIG are the employer&apos;s duty by law.
-        </p>
-        {!isOwn && profile && (
-          <details className="mt-3">
-            <summary className="cursor-pointer text-xs font-medium" style={{ color: "var(--c-text-2)" }}>
-              ⚠ Report this ad
-            </summary>
-            <form action={reportAction} className="mt-2 flex flex-col gap-2">
-              <input type="hidden" name="targetType" value="job_ad" />
-              <input type="hidden" name="targetId" value={ad.id} />
-              <input type="hidden" name="back" value={`/trabaho/${ad.id}`} />
-              <textarea
-                name="reason"
-                className="cc-input"
-                style={{ minHeight: 60, paddingTop: 10, paddingBottom: 10, fontSize: 13 }}
-                placeholder="What's wrong? (asking for fees, fake job, overseas recruitment…)"
-                maxLength={300}
-                required
-              />
-              <button type="submit" className="cc-btn cc-btn-secondary" style={{ minHeight: 38 }}>
-                Send report
-              </button>
-            </form>
-          </details>
-        )}
-      </BlurFade>
+        {/* Right: salary + apply (sticky on desktop) */}
+        <div className="mt-3 flex flex-col lg:mt-0 lg:sticky lg:top-20">
+          <BlurFade delay={0.18}>
+            <div className="cc-card mb-3">
+              <div className="mb-3 text-sm font-semibold cc-num">
+                {salaryLine(ad) ?? (
+                  <span style={{ color: "var(--c-text-3)", fontWeight: 400 }}>
+                    Salary not shown — ask the employer
+                  </span>
+                )}
+              </div>
+
+              {isOwn ? (
+                <div>
+                  <div className="mb-1.5 text-sm font-semibold">This is your ad</div>
+                  <Link href="/trabaho/my" className="text-xs font-semibold" style={{ color: "var(--c-accent)" }}>
+                    Manage applicants →
+                  </Link>
+                </div>
+              ) : !fresh || ad.status !== "open" ? (
+                <div className="text-xs" style={{ color: "var(--c-text-2)" }}>
+                  This ad is no longer accepting interest.
+                </div>
+              ) : myInterest ? (
+                <div>
+                  <span
+                    className="cc-badge"
+                    style={{
+                      background: INTEREST_STYLES[myInterest.status]?.bg,
+                      color: INTEREST_STYLES[myInterest.status]?.fg,
+                    }}
+                  >
+                    {INTEREST_STYLES[myInterest.status]?.label ?? myInterest.status}
+                  </span>
+                  {myInterest.status === "shortlisted" && (
+                    <div className="mt-2.5 text-sm">
+                      <div className="mb-0.5 text-xs" style={{ color: "var(--c-text-2)" }}>
+                        You were shortlisted — contact each other:
+                      </div>
+                      <div className="font-semibold cc-num">📞 {myInterest.posterMobile}</div>
+                    </div>
+                  )}
+                  {(myInterest.status === "interested" || myInterest.status === "shortlisted") && (
+                    <form action={withdrawInterestAction} className="mt-3">
+                      <input type="hidden" name="adId" value={ad.id} />
+                      <button
+                        type="submit"
+                        className="cc-btn cc-btn-ghost"
+                        style={{ width: "auto", padding: "0 14px", minHeight: 36, fontSize: 12 }}
+                      >
+                        Withdraw interest
+                      </button>
+                    </form>
+                  )}
+                </div>
+              ) : !uid ? (
+                <div>
+                  <div className="mb-1 text-sm font-semibold">I&apos;m interested</div>
+                  <p className="mb-3 text-xs leading-relaxed" style={{ color: "var(--c-text-2)" }}>
+                    Create a free account (or log in) to express interest — applying is
+                    always free for workers.
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    <Link href={`/register?next=${encodeURIComponent(nextPath)}`} className="cc-btn cc-btn-primary">
+                      Sign up — it&apos;s free
+                    </Link>
+                    <Link href={`/login?next=${encodeURIComponent(nextPath)}`} className="cc-btn cc-btn-secondary">
+                      I already have an account
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <InterestForm adId={ad.id} />
+              )}
+            </div>
+          </BlurFade>
+
+          <BlurFade delay={0.24}>
+            <p className="text-xs leading-relaxed" style={{ color: "var(--c-text-3)" }}>
+              Meet in safe public places first, agree on wages and schedule in
+              writing, and NEVER pay any fee to get a job — legitimate employers
+              don&apos;t charge workers. Kasambahay hires: written contract, minimum
+              wage, SSS/PhilHealth/Pag-IBIG are the employer&apos;s duty by law.
+            </p>
+            {!isOwn && profile && (
+              <details className="mt-3">
+                <summary className="cursor-pointer text-xs font-medium" style={{ color: "var(--c-text-2)" }}>
+                  ⚠ Report this ad
+                </summary>
+                <form action={reportAction} className="mt-2 flex flex-col gap-2">
+                  <input type="hidden" name="targetType" value="job_ad" />
+                  <input type="hidden" name="targetId" value={ad.id} />
+                  <input type="hidden" name="back" value={`/trabaho/${ad.id}`} />
+                  <textarea
+                    name="reason"
+                    className="cc-input"
+                    style={{ minHeight: 60, paddingTop: 10, paddingBottom: 10, fontSize: 13 }}
+                    placeholder="What's wrong? (asking for fees, fake job, overseas recruitment…)"
+                    maxLength={300}
+                    required
+                  />
+                  <button type="submit" className="cc-btn cc-btn-secondary" style={{ minHeight: 38 }}>
+                    Send report
+                  </button>
+                </form>
+              </details>
+            )}
+          </BlurFade>
+        </div>
+      </div>
     </div>
   );
 }

@@ -35,7 +35,7 @@ export default async function TrabahoPage({
   };
 
   return (
-    <div className="mx-auto w-full max-w-sm">
+    <div className="mx-auto w-full max-w-sm md:max-w-2xl lg:max-w-4xl">
       <BackLink href="/" label="Home" />
       <BlurFade delay={0}>
         <h1 className="mb-1 text-[24px] font-semibold tracking-tight">💼 Trabaho</h1>
@@ -83,7 +83,7 @@ export default async function TrabahoPage({
         </div>
       </BlurFade>
 
-      <div className="flex flex-col gap-3">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
         {ads.length === 0 && (
           <BlurFade delay={0.1}>
             <div className="cc-card text-center">

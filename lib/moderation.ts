@@ -1,6 +1,7 @@
 import "server-only";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase/admin";
+import { createNotification } from "@/lib/notifications";
 
 // Moderation engine: user reports + tripwire auto-hide + flagged-content
 // listing for the admin queue. Content rules live in lib/content-guard.ts;
@@ -31,6 +32,83 @@ function collectionFor(targetType: ReportTargetType) {
       return db.collection("job_ads");
     case "job_ad_interest":
       return db.collection("job_ad_interests");
+  }
+}
+
+const TARGET_LABELS: Record<ReportTargetType, string> = {
+  listing: "service listing",
+  job_post: "request",
+  job_offer: "offer",
+  job_ad: "job ad",
+  job_ad_interest: "application",
+};
+
+function ownerUidOf(targetType: ReportTargetType, d: FirebaseFirestore.DocumentData): string | null {
+  switch (targetType) {
+    case "listing": return d.providerUid ?? null;
+    case "job_post": return d.seekerUid ?? null;
+    case "job_ad": return d.posterUid ?? null;
+    case "job_offer": return d.providerUid ?? null;
+    case "job_ad_interest": return d.workerUid ?? null;
+  }
+}
+
+function ownerLink(targetType: ReportTargetType): string {
+  switch (targetType) {
+    case "listing": return "/provider";
+    case "job_post": return "/seeker/requests";
+    case "job_ad": return "/trabaho/my";
+    case "job_offer": return "/provider/jobs";
+    case "job_ad_interest": return "/trabaho/my";
+  }
+}
+
+/**
+ * Tell the owner their content was hidden (tripwire) or removed (moderator),
+ * or restored after review. Reads the doc for owner + title.
+ */
+export async function notifyOwner(
+  targetType: ReportTargetType,
+  targetId: string,
+  cause: "reports" | "moderator" | "restored"
+): Promise<void> {
+  try {
+    const snap = await collectionFor(targetType).doc(targetId).get();
+    if (!snap.exists) return;
+    const d = snap.data() ?? {};
+    const uid = ownerUidOf(targetType, d);
+    if (!uid) return;
+    const label = TARGET_LABELS[targetType];
+    const title = String(d.title ?? d.providerName ?? d.workerName ?? label);
+    if (cause === "restored") {
+      await createNotification({
+        uid,
+        type: "moderation_restored",
+        title: `Your ${label} was restored`,
+        body: `“${title}” passed review and is visible again. Sorry for the interruption!`,
+        link: ownerLink(targetType),
+      });
+      return;
+    }
+    if (cause === "reports") {
+      await createNotification({
+        uid,
+        type: "moderation_review",
+        title: `Your ${label} is under review`,
+        body: `“${title}” was hidden after multiple reports. Our team will review it — if it was a mistake, it will be restored.`,
+        link: ownerLink(targetType),
+      });
+      return;
+    }
+    await createNotification({
+      uid,
+      type: "moderation_removed",
+      title: `Your ${label} was removed`,
+      body: `“${title}” was removed by moderators for breaking our rules (scams, illegal content, or unsafe posts). Repeated violations can lead to account suspension.`,
+      link: ownerLink(targetType),
+    });
+  } catch {
+    // Notifications are best-effort — never block moderation on them.
   }
 }
 
@@ -104,6 +182,9 @@ export async function fileReport(input: {
   if (shouldHide) {
     const hid = await hideTarget(input.targetType, input.targetId);
     hidden = "ok" in hid;
+    if (hidden) {
+      await notifyOwner(input.targetType, input.targetId, "reports");
+    }
   }
 
   await ref.set({

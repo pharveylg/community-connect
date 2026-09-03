@@ -84,7 +84,7 @@ export default async function Home({
         style={{ background: "radial-gradient(circle, rgba(14,122,95,.14), transparent 70%)" }}
       />
 
-      <div className="relative mx-auto w-full max-w-md px-5 pt-16">
+      <div className="relative mx-auto w-full max-w-md px-5 pt-16 lg:max-w-5xl">
         {/* Hero */}
         <BlurFade delay={0} duration={0.5}>
           <div
@@ -187,7 +187,7 @@ export default async function Home({
           </div>
         </BlurFade>
 
-        <div className="mb-10 flex flex-col gap-3">
+        <div className="mb-10 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
           {visibleServices.length === 0 && (
             <BlurFade delay={0.34} inView>
               <div className="cc-card text-center">
@@ -286,12 +286,12 @@ export default async function Home({
         </p>
       </BlurFade>
 
-      <div className="relative mx-auto w-full max-w-md px-5 pb-10">
+      <div className="relative mx-auto w-full max-w-md px-5 pb-10 lg:max-w-5xl">
         {/* How it works */}
         <BlurFade delay={0.1} inView>
           <h2 className="mt-12 mb-5 text-[22px] font-semibold tracking-tight">How it works</h2>
         </BlurFade>
-        <div className="mb-12 flex flex-col gap-3">
+        <div className="mb-12 grid grid-cols-1 gap-3 md:grid-cols-3">
           {STEPS.map((step, i) => (
             <BlurFade key={step.n} delay={0.14 + i * 0.1} inView>
               <div className="cc-card flex gap-4">

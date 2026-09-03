@@ -48,7 +48,7 @@ export default async function MyRequestsPage({
   const trust = await getProviderTrust(providerUids);
 
   return (
-    <div className="mx-auto w-full max-w-sm">
+    <div className="mx-auto w-full max-w-sm md:max-w-2xl lg:max-w-4xl">
       <BackLink href="/seeker" label="Home" />
       <BlurFade delay={0}>
         <h1 className="mb-1 text-[24px] font-semibold tracking-tight">My requests</h1>
@@ -75,7 +75,7 @@ export default async function MyRequestsPage({
         </Link>
       </BlurFade>
 
-      <div className="mt-5 flex flex-col gap-4">
+      <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
         {posts.length === 0 && (
           <BlurFade delay={0.08}>
             <div className="cc-card text-center">
@@ -90,7 +90,9 @@ export default async function MyRequestsPage({
         )}
 
         {postsWithOffers.map(({ post, offers }, i) => {
-          const st = STATUS_STYLES[post.status];
+          const st = post.removedByModeration
+            ? { bg: "var(--c-danger-light)", fg: "var(--c-danger)", label: "Removed by moderators" }
+            : STATUS_STYLES[post.status];
           const pendingOffers = offers.filter((o) => o.status === "pending");
           return (
             <BlurFade key={post.id} delay={0.08 + i * 0.06}>

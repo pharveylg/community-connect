@@ -1,5 +1,7 @@
 import { getCurrentProfile } from "@/lib/dal";
 import { logout } from "@/app/actions/auth";
+import { countUnread } from "@/lib/notifications";
+import Link from "next/link";
 
 function initials(name: string) {
   return name
@@ -13,10 +15,27 @@ function initials(name: string) {
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const profile = await getCurrentProfile();
+  const unread = await countUnread(profile.uid);
 
   return (
     <div className="flex flex-1 flex-col">
       <div className="flex items-center justify-end gap-3 px-4 pt-2.5">
+        <Link
+          href="/notifications"
+          aria-label={`Notifications${unread > 0 ? ` (${unread} unread)` : ""}`}
+          className="relative flex h-9 w-9 items-center justify-center rounded-full text-base"
+          style={{ background: "var(--c-surface)", boxShadow: "var(--shadow-border)" }}
+        >
+          🔔
+          {unread > 0 && (
+            <span
+              className="cc-num absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white"
+              style={{ background: "var(--c-danger)" }}
+            >
+              {unread}
+            </span>
+          )}
+        </Link>
         <div
           className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold"
           style={{

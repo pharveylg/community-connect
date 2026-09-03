@@ -168,6 +168,8 @@ export type ServiceListing = {
   barangay: string;
   leadTime: LeadTime;
   active: boolean;
+  /** Hidden by moderation (auto-hide tripwire or admin removal). */
+  removedByModeration?: boolean;
   createdAt: Date | null;
 };
 
@@ -191,6 +193,7 @@ function listingFromSnap(
     barangay: data.barangay,
     leadTime: data.leadTime,
     active: data.active !== false,
+    removedByModeration: data.moderation?.hiddenAt != null,
     createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : null,
   };
 }

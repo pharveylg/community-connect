@@ -37,6 +37,7 @@ export type JobAd = {
   barangay: string;
   city: string;
   status: JobAdStatus;
+  removedByModeration: boolean;
   createdAt: Date | null;
 };
 
@@ -78,6 +79,7 @@ function adFromSnap(id: string, d: FirebaseFirestore.DocumentData): JobAd {
     barangay: d.barangay,
     city: d.city,
     status: d.status === "filled" ? "filled" : d.status === "closed" ? "closed" : "open",
+    removedByModeration: d.moderation?.hiddenAt != null,
     createdAt: d.createdAt instanceof Timestamp ? d.createdAt.toDate() : null,
   };
 }

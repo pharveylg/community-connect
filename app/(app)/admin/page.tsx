@@ -63,7 +63,7 @@ export default async function AdminHomePage({
   const providerCount = users.filter((u) => u.role === "provider").length;
 
   return (
-    <div className="mx-auto w-full max-w-md">
+    <div className="mx-auto w-full max-w-md lg:max-w-4xl">
       <BlurFade delay={0}>
         <div className="mb-1 flex items-center gap-2">
           <span className="text-xs font-medium" style={{ color: "var(--c-text-2)" }}>

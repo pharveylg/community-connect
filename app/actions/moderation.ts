@@ -11,6 +11,7 @@ import {
   restoreTarget,
   resolveTargetReports,
   markReviewed,
+  notifyOwner,
   type ReportTargetType,
 } from "@/lib/moderation";
 
@@ -89,12 +90,15 @@ export async function adminModerateAction(formData: FormData) {
   if (op === "remove" && targetType && TARGET_TYPES.includes(targetType) && targetId) {
     await hideTarget(targetType, targetId);
     await resolveTargetReports(targetType, targetId, profile.uid);
+    await notifyOwner(targetType, targetId, "moderator");
   } else if (op === "keep" && targetType && TARGET_TYPES.includes(targetType) && targetId) {
     // False positive: restore if it was auto-hidden, resolve reports.
-    await restoreTarget(targetType, targetId);
+    const wasHidden = await restoreTarget(targetType, targetId);
     await resolveTargetReports(targetType, targetId, profile.uid);
+    await notifyOwner(targetType, targetId, "restored");
   } else if (op === "restore" && targetType && TARGET_TYPES.includes(targetType) && targetId) {
     await restoreTarget(targetType, targetId);
+    await notifyOwner(targetType, targetId, "restored");
   } else if (op === "reviewed" && collection && flaggedId) {
     await markReviewed(String(collection), flaggedId);
   } else if (op === "remove-flagged" && collection && flaggedId) {
